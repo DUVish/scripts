@@ -23,19 +23,27 @@ Array.from(document.querySelectorAll("a")).forEach(function(el) {
   }
 });
 
-Array.from(document.querySelectorAll("font")).filter(el => el.color==="#000000" && el.face==="verdana").forEach(el => el.innerHTML += `<br><span class='fixImg'>${el.parentNode.children[1].innerText.slice(-3) === "..." ? "Not fixed." : "Fixed!"}</span>`);
+Array.from(document.querySelectorAll("font")).filter(el => el.color==="#000000" && el.face==="verdana").forEach(el => el.innerHTML += `<br><span class='fixImg'>${el.parentNode.children[1].innerText.slice(-3) === "..." ? "Click here to fix." : "Fixed!"}</span>`);
 
-/*
+
 Array.from(document.getElementsByClassName("fixImg")).forEach((el, i) => el.addEventListener("click", function(e) {
   el.innerText = "Fixing...";
-  console.log("url", cache[i]);
+  //console.log("url", cache[i]);
   $.ajax({
     type: "GET",
     url: cache[i],
     success: function(data) {
-      el.parentNode.parentNode.parentNode.parentNode.children[0].children[0].children[0].href = data.match(/https:\/\/x\.imagefapusercontent\.com\/u\/\w+\/\d+\/\d+\/^[.]+\.\w+/);
-      el.innerText = "Fixed!";
+      let newURL = data.match(/https:\/\/x\.imagefapusercontent\.com\/u\/\w+\/\d+\/\d+\/^[.]+\.\w+/);
+      if (newURL === null) el.innerText = "Sorry, error!";
+      else {
+        el.parentNode.parentNode.parentNode.parentNode.children[0].children[0].children[0].href = newURL;
+        el.innerText = "Fixed!";
+      }
+    },
+    error: function(data) {
+      el.innerText = "Error (hover for info).";
+      el.title = data;
     }
   });
 }));
-*/
+
