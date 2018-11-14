@@ -30,6 +30,8 @@ function inOnClickFunc(e, node) {
 
 document.querySelector("head").innerHTML += '<style>.clicked {opacity: 0.3;}</style>';
 
+document.querySelector("title").innerText = "/b/ - " + document.querySelector(".text").innerText;
+
 function backlinkClick(e, node) {
   e.preventDefault();
   let targetID = node.innerHTML.slice(8);
