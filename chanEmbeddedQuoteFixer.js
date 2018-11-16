@@ -2,7 +2,7 @@
 // @name         chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, allows for expand all/collapse all via arrows in post header
 // @author       You
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
@@ -30,9 +30,50 @@
         }).forEach(el => el.addEventListener("click", qSpanClick));
 
         addRemoveCapability();
-    }, 5500);
+        addCollapseAndExpand();
+    }, 4000);
 //});
 
+
+function addCollapseAndExpand() {
+  Array.from(document.querySelectorAll(".post.reply")).forEach(postNode => {
+    if (Array.from(postNode.children[1].children).filter(node => node.classList.contains("expandSpan")).length === 0) {
+      let expandSpan = document.createElement("span");
+      expandSpan.classList.add("expandSpan");
+      expandSpan.innerText = "[↓]";
+      expandSpan.title = "expand all 'quoted by' posts";
+      expandSpan.style.color = "#1019d2e6";
+      expandSpan.style.fontSize = "11px";
+      expandSpan.style.paddingLeft = "5px";
+      expandSpan.style.paddingRight = "5px";
+      expandSpan.style.whiteSpace = "nowrap";
+      let collapseSpan = document.createElement("span");
+      collapseSpan.classList.add("collapseSpan");
+      collapseSpan.style.color = "#1019d2e6";
+      collapseSpan.innerText = "[↑]";
+      collapseSpan.title = "collapse all 'quoted by' posts";
+      collapseSpan.style.fontSize = "11px";
+      collapseSpan.style.paddingRight = "0px";
+      collapseSpan.style.whiteSpace = "nowrap";
+      postNode.children[1].insertBefore(expandSpan, postNode.querySelector(".postMenuBtn"));
+      postNode.children[1].insertBefore(collapseSpan, postNode.querySelector(".postMenuBtn"));
+    }
+    let expand = postNode.querySelector(".expandSpan");
+    let collapse = postNode.querySelector(".collapseSpan");
+    expand.removeEventListener("click", expandSpanEL);
+    expand.addEventListener("click", expandSpanEL);
+    collapse.removeEventListener("click", collapseSpanEL);
+    collapse.addEventListener("click", collapseSpanEL);
+  });
+}
+
+function expandSpanEL(e) {
+  Array.from(Array.from(e.target.parentNode.children).filter(node => node.classList.contains("backlink"))[0].children).forEach(node => {if (!node.children[0].classList.contains("linkfade")) node.children[0].click();});
+}
+
+function collapseSpanEL(e) {
+  Array.from(Array.from(e.target.parentNode.children).filter(node => node.classList.contains("backlink"))[0].children).forEach(node => {if (node.children[0].classList.contains("linkfade")) node.children[0].click();});
+}
 
 function qSpanClick(e) {
   e.preventDefault();
@@ -109,6 +150,7 @@ function resetQLEV() {
   newSpanList.forEach(el => el.addEventListener("click", qSpanClick));
   Array.from(document.getElementsByClassName("postInfo desktop")).forEach(el => el.children[0].removeEventListener("click", postRemove));
   addRemoveCapability();
+  setTimeout(function() {addCollapseAndExpand();}, 100);
 }
 
 let observer = new MutationObserver(resetQLEV);
