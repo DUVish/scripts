@@ -2,7 +2,7 @@
 // @name         barchive image and quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  replaces thumbnails with full image on click and inlines "quoted by" posts on click, also works with webms
+// @description  replaces thumbnails with full image or webm on click and inlines "quoted by" posts on click, can also remove posts and tessellate inlined posts
 // @author       You
 // @match        https://thebarchive.com/b/thread/*
 // @match        https://archived.moe/*/thread/*
@@ -10,18 +10,28 @@
 // ==/UserScript==
 
 Array.from($(".post_data")).forEach(el => {
+    el.innerHTML += '<span class="tessellatePost" style="font-size: 10.5px;position: relative;top: -2px;padding-left: 6px;color: #7fa5c6;opacity: 0.95;padding-right: 15px;">[Tessellate]</span>';
+});
+
+Array.from($(".post_data")).forEach(el => {
     el.children[8].children[0].style.paddingLeft = "0px";
     el.children[8].children[0].style.marginLeft = "-3px";
     el.innerHTML += '<span class="postRemove" style="font-size: 9.5px;position: relative;top: -1px;padding-left: 5px;color: darkgrey;opacity: 0.45;">Remove</span>';
 });
 
+Array.from(document.querySelectorAll(".text")).forEach(el => el.innerHTML += '<span class="inlinedQuotesContainer"></span>');
+
 $(".postRemove").on("click", function(e) {
-    this.parentNode.parentNode.parentNode.parentNode.remove();
+    postRemove(e, this);
 });
 
 $(".backlink").on("click", function(e) {
     inOnClickFunc(e, this);
 });
+
+function postRemove(e, node) {
+    node.parentNode.parentNode.parentNode.remove();
+}
 
 function inOnClickFunc(e, node) {
     backlinkClick(e, node);
@@ -31,6 +41,26 @@ function inOnClickFunc(e, node) {
 document.querySelector("head").innerHTML += '<style>.clicked {opacity: 0.3;}</style>';
 
 document.querySelector("title").innerText = "/b/ - " + document.querySelector(".text").innerText;
+
+$(".tessellatePost").on("click", function(e) {
+    tessellatePost(e, this);
+});
+
+function tessellatePost(e, node) {
+  let container = node.parentNode.parentNode.parentNode.parentNode.querySelector(".inlinedQuotesContainer");
+  let tesSpan = node.parentNode.parentNode.parentNode.parentNode.querySelector(".tessellatePost");
+  if (container.style.display !== "flex") {
+    container.style.display = "flex";
+    container.style.flexWrap = "wrap";
+    tesSpan.style.opacity = "0.45";
+    tesSpan.style.color = "darkgrey";
+  } else {
+    container.style.display = "";
+    container.style.flexWrap = "";
+    tesSpan.style.opacity = "0.95";
+    tesSpan.style.color = "#98c7f0";
+  }
+}
 
 function backlinkClick(e, node) {
     e.preventDefault();
@@ -43,10 +73,10 @@ function backlinkClick(e, node) {
         newPost.style.borderRadius = "6px";
         newPost.style.marginTop = "13px";
         setTimeout(function(){newPost.classList.remove("highlight");}, 10);
-        node.parentNode.parentNode.parentNode.children[node.parentNode.parentNode.parentNode.children[0].classList.contains("post_file") ? 4 : 2].appendChild(newPost);
+        node.parentNode.parentNode.parentNode.children[node.parentNode.parentNode.parentNode.children[0].classList.contains("post_file") ? 4 : 2].getElementsByClassName("inlinedQuotesContainer")[0].appendChild(newPost);
     } else {
         node.classList.remove("clicked");
-        Array.from(node.parentNode.parentNode.parentNode.children[node.parentNode.parentNode.parentNode.children[0].classList.contains("post_file") ? 4 : 2].children)
+        Array.from(node.parentNode.parentNode.parentNode.children[node.parentNode.parentNode.parentNode.children[0].classList.contains("post_file") ? 4 : 2].getElementsByClassName("inlinedQuotesContainer")[0].children)
             .filter(el => el.id === targetID).forEach(el => el.remove());
     }
 }
@@ -60,6 +90,14 @@ function backlinkReset(e, node) {
     $(".post_image").on("click", function(e) {
         settingClickHandler(e, this);
     });
+    $(".tessellatePost").off();
+    $(".tessellatePost").on("click", function(e) {
+        tessellatePost(e, this);
+    });
+    //$(".postRemove").off();
+    //$(".postRemove").on("click", function(e) {
+    //    postRemove(e, node);
+    //});
 }
 
 $(".post_image").on("click", function(e) {
@@ -106,3 +144,5 @@ function settingClickHandler(e, node) {
         }
     }
 }
+
+Array.from(document.querySelectorAll(".backlink.op")).forEach(el => el.innerText += "  (OP)");
