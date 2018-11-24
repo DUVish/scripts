@@ -1,0 +1,88 @@
+// ==UserScript==
+// @name         chan/channel crossover
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  shows all boards on all pages, all links go to catalogs
+// @author       You
+// @match        http://boards.4channel.org/*/catalog
+// @match        http://boards.4chan.org/*/catalog
+// @match        http://boards.4channel.org/*/thread/*
+// @match        http://boards.4chan.org/*/thread/*
+// @match        http://boards.4channel.org/*/
+// @match        http://boards.4chan.org/*/
+// @grant        none
+// ==/UserScript==
+
+setTimeout(headerFooterFix, 1500);
+
+function headerFooterFix() {
+  document.querySelector("#boardNavDesktop").outerHTML = `<div id="boardNavDesktop" class="desktop"><span class="boardList">
+[<a href="//boards.4channel.org/a/catalog" title="Anime &amp; Manga" marked="1">a</a> / <a href="//boards.4chan.org/b/catalog" title="Random" marked="1">b</a> / <a href="//boards.4channel.org/c/catalog" title="Anime/Cute" marked="1">c</a>
+/ <a href="//boards.4chan.org/d/catalog" title="Hentai/Alternative" marked="1">d</a> / <a href="/e/catalog" title="Ecchi" marked="1">e</a> / <a href="/f/" title="Flash" marked="1">f</a>
+/ <a href="//boards.4channel.org/g/catalog" title="Technology" marked="1">g</a> / <a href="//boards.4chan.org/gif/catalog" title="Adult GIF" marked="1">gif</a> / <a href="//boards.4chan.org/h/catalog" title="Hentai" marked="1">h</a>
+/ <a href="//boards.4chan.org/hr/catalog" title="High Resolution" marked="1">hr</a> / <a href="//boards.4channel.org/k/catalog" title="Weapons" marked="1">k</a> / <a href="//boards.4channel.org/m/catalog" title="Mecha" marked="1">m</a>
+/ <a href="//boards.4channel.org/o/catalog" title="Auto" marked="1">o</a> / <a href="//boards.4channel.org/p/catalog" title="Photo" marked="1">p</a> / <a href="//boards.4chan.org/r/catalog" title="Adult Requests" marked="1">r</a>
+/ <a href="//boards.4chan.org/s/catalog" title="Sexy Beautiful Women" marked="1">s</a> / <a href="//boards.4chan.org/t/catalog" title="Torrents" marked="1">t</a> / <a href="//boards.4chan.org/u/catalog" title="Yuri" marked="1">u</a>
+/ <a href="//boards.4channel.org/v/catalog" title="Video Games" marked="1">v</a> / <a href="//boards.4channel.org/vg/catalog" title="Video Game Generals" marked="1">vg</a>
+/ <a href="//boards.4channel.org/vr/catalog" title="Retro Games" marked="1">vr</a> / <a href="//boards.4channel.org/w/catalog" title="Anime/Wallpapers" marked="1">w</a>
+/ <a href="//boards.4chan.org/wg/catalog" title="Wallpapers/General" marked="1">wg</a>] [<a href="/i/catalog" title="Oekaki" marked="1">i</a> / <a href="//boards.4chan.org/ic/catalog" title="Artwork/Critique" marked="1">ic</a>]
+[<a href="//boards.4chan.org/r9k/catalog" title="ROBOT9001" marked="1">r9k</a> / <a href="//boards.4chan.org/s4s/catalog" title="Shit 4chan Says" marked="1">s4s</a> / <a href="//boards.4channel.org/vip/catalog" title="Very Important Posts" marked="1">vip</a>
+/ <a href="//boards.4channel.org/qa/catalog" title="Question &amp; Answer" marked="1">qa</a>] [<a href="//boards.4channel.org/cm/catalog" title="Cute/Male" marked="1">cm</a>
+/ <a href="//boards.4chan.org/hm/catalog" title="Handsome Men" marked="1">hm</a> / <a href="//boards.4channel.org/lgbt/catalog" title="LGBT" marked="1">lgbt</a> / <a href="//boards.4chan.org/y/catalog" title="Yaoi" marked="1">y</a>]
+[<a href="//boards.4channel.org/3/catalog" title="3DCG" marked="1">3</a> / <a href="//boards.4chan.org/aco/catalog" title="Adult Cartoons" marked="1">aco</a> / <a href="//boards.4channel.org/adv/catalog" title="Advice" marked="1">adv</a>
+/ <a href="//boards.4channel.org/an/catalog" title="Animals &amp; Nature" marked="1">an</a> / <a href="//boards.4channel.org/asp/catalog" title="Alternative Sports" marked="1">asp</a>
+/ <a href="//boards.4chan.org/bant/catalog" title="International/Random" marked="1">bant</a> / <a href="//boards.4channel.org/biz/catalog" title="Business &amp; Finance" marked="1">biz</a>
+/ <a href="//boards.4channel.org/cgl/catalog" title="Cosplay &amp; EGL" marked="1">cgl</a> / <a href="//boards.4channel.org/ck/catalog" title="Food &amp; Cooking" marked="1">ck</a>
+/ <a href="//boards.4channel.org/co/catalog" title="Comics &amp; Cartoons" marked="1">co</a> / <a href="//boards.4channel.org/diy/catalog" title="Do It Yourself" marked="1">diy</a>
+/ <a href="//boards.4channel.org/fa/catalog" title="Fashion" marked="1">fa</a> / <a href="//boards.4channel.org/fit/catalog" title="Fitness" marked="1">fit</a>
+/ <a href="//boards.4channel.org/gd/catalog" title="Graphic Design" marked="1">gd</a> / <a href="//boards.4chan.org/hc/catalog" title="Hardcore" marked="1">hc</a>
+/ <a href="//boards.4channel.org/his/catalog" title="History &amp; Humanities" marked="1">his</a> / <a href="//boards.4channel.org/int/catalog" title="International" marked="1">int</a>
+/ <a href="//boards.4channel.org/jp/catalog" title="Otaku Culture" marked="1">jp</a> / <a href="//boards.4channel.org/lit/catalog" title="Literature" marked="1">lit</a>
+/ <a href="//boards.4channel.org/mlp/catalog" title="Pony" marked="1">mlp</a> / <a href="//boards.4channel.org/mu/catalog" title="Music" marked="1">mu</a>
+/ <a href="//boards.4channel.org/n/catalog" title="Transportation" marked="1">n</a> / <a href="//boards.4channel.org/news/catalog" title="Current News" marked="1">news</a>
+/ <a href="//boards.4channel.org/out/catalog" title="Outdoors" marked="1">out</a> / <a href="//boards.4channel.org/po/catalog" title="Papercraft &amp; Origami" marked="1">po</a>
+/ <a href="//boards.4chan.org/pol/catalog" title="Politically Incorrect" marked="1">pol</a> / <a href="//boards.4channel.org/qst/catalog" title="Quests" marked="1">qst</a>
+/ <a href="//boards.4channel.org/sci/catalog" title="Science &amp; Math" marked="1">sci</a> / <a href="//boards.4chan.org/soc/catalog" title="Cams &amp; Meetups" marked="1">soc</a>
+/ <a href="//boards.4channel.org/sp/catalog" title="Sports" marked="1">sp</a> / <a href="//boards.4channel.org/tg/catalog" title="Traditional Games" marked="1">tg</a>
+/ <a href="//boards.4channel.org/toy/catalog" title="Toys" marked="1">toy</a> / <a href="//boards.4channel.org/trv/catalog" title="Travel" marked="1">trv</a>
+/ <a href="//boards.4channel.org/tv/catalog" title="Television &amp; Film" marked="1">tv</a> / <a href="//boards.4channel.org/vp/catalog" title="Pokémon" marked="1">vp</a>
+/ <a href="//boards.4channel.org/wsg/catalog" title="Worksafe GIF" marked="1">wsg</a> / <a href="//boards.4channel.org/wsr/catalog" title="Worksafe Requests" marked="1">wsr</a>
+/ <a href="//boards.4channel.org/x/catalog" title="Paranormal" marked="1">x</a>] <span class="custom-menu-ctrl">
+[<a data-cm-edit="" title="Edit Menu" href="#" marked="1">Edit</a>]</span></span><span id="navtopright">[<a href="javascript:void(0);" id="settingsWindowLink" marked="1">Settings</a>]
+[<a href="/search" title="Search" marked="1">Search</a>] [<a href="//www.4chan.org/" target="_top" marked="1">Home</a>]
+</span></div>`;
+    document.querySelector("#boardNavDesktopFoot").outerHTML = `<div id="boardNavDesktopFoot" class="desktop"><span class="boardList">
+[<a href="//boards.4channel.org/a/catalog" title="Anime &amp; Manga" marked="1">a</a> / <a href="//boards.4chan.org/b/catalog" title="Random" marked="1">b</a> / <a href="//boards.4channel.org/c/catalog" title="Anime/Cute" marked="1">c</a>
+/ <a href="//boards.4chan.org/d/catalog" title="Hentai/Alternative" marked="1">d</a> / <a href="//boards.4chan.org/e/catalog" title="Ecchi" marked="1">e</a> / <a href="/f/" title="Flash" marked="1">f</a>
+/ <a href="//boards.4channel.org/g/catalog" title="Technology" marked="1">g</a> / <a href="//boards.4chan.org/gif/catalog" title="Adult GIF" marked="1">gif</a> / <a href="//boards.4chan.org/h/catalog" title="Hentai" marked="1">h</a>
+/ <a href="//boards.4chan.org/hr/catalog" title="High Resolution" marked="1">hr</a> / <a href="//boards.4channel.org/k/catalog" title="Weapons" marked="1">k</a> / <a href="//boards.4channel.org/m/catalog" title="Mecha" marked="1">m</a>
+/ <a href="//boards.4channel.org/o/catalog" title="Auto" marked="1">o</a> / <a href="//boards.4channel.org/p/catalog" title="Photo" marked="1">p</a> / <a href="//boards.4chan.org/r/catalog" title="Adult Requests" marked="1">r</a>
+/ <a href="//boards.4chan.org/s/catalog" title="Sexy Beautiful Women" marked="1">s</a> / <a href="//boards.4chan.org/t/catalog" title="Torrents" marked="1">t</a> / <a href="//boards.4chan.org/u/catalog" title="Yuri" marked="1">u</a>
+/ <a href="//boards.4channel.org/v/catalog" title="Video Games" marked="1">v</a> / <a href="//boards.4channel.org/vg/catalog" title="Video Game Generals" marked="1">vg</a>
+/ <a href="//boards.4channel.org/vr/catalog" title="Retro Games" marked="1">vr</a> / <a href="//boards.4channel.org/w/catalog" title="Anime/Wallpapers" marked="1">w</a>
+/ <a href="//boards.4chan.org/wg/catalog" title="Wallpapers/General" marked="1">wg</a>] [<a href="//boards.4chan.org/i/catalog" title="Oekaki" marked="1">i</a> / <a href="//boards.4chan.org/ic/catalog" title="Artwork/Critique" marked="1">ic</a>]
+[<a href="//boards.4chan.org/r9k/catalog" title="ROBOT9001" marked="1">r9k</a> / <a href="//boards.4chan.org/s4s/catalog" title="Shit 4chan Says" marked="1">s4s</a> / <a href="//boards.4channel.org/vip/catalog" title="Very Important Posts" marked="1">vip</a>
+/ <a href="//boards.4channel.org/qa/catalog" title="Question &amp; Answer" marked="1">qa</a>] [<a href="//boards.4channel.org/cm/catalog" title="Cute/Male" marked="1">cm</a>
+/ <a href="//boards.4chan.org/hm/catalog" title="Handsome Men" marked="1">hm</a> / <a href="//boards.4channel.org/lgbt/catalog" title="LGBT" marked="1">lgbt</a> / <a href="//boards.4chan.org/y/catalog" title="Yaoi" marked="1">y</a>]
+[<a href="//boards.4channel.org/3/catalog" title="3DCG" marked="1">3</a> / <a href="//boards.4chan.org/aco/catalog" title="Adult Cartoons" marked="1">aco</a> / <a href="//boards.4channel.org/adv/catalog" title="Advice" marked="1">adv</a>
+/ <a href="//boards.4channel.org/an/catalog" title="Animals &amp; Nature" marked="1">an</a> / <a href="//boards.4channel.org/asp/catalog" title="Alternative Sports" marked="1">asp</a>
+/ <a href="//boards.4chan.org/bant/catalog" title="International/Random" marked="1">bant</a> / <a href="//boards.4channel.org/biz/catalog" title="Business &amp; Finance" marked="1">biz</a>
+/ <a href="//boards.4channel.org/cgl/catalog" title="Cosplay &amp; EGL" marked="1">cgl</a> / <a href="//boards.4channel.org/ck/catalog" title="Food &amp; Cooking" marked="1">ck</a>
+/ <a href="//boards.4channel.org/co/catalog" title="Comics &amp; Cartoons" marked="1">co</a> / <a href="//boards.4channel.org/diy/catalog" title="Do It Yourself" marked="1">diy</a>
+/ <a href="//boards.4channel.org/fa/catalog" title="Fashion" marked="1">fa</a> / <a href="//boards.4channel.org/fit/catalog" title="Fitness" marked="1">fit</a>
+/ <a href="//boards.4channel.org/gd/catalog" title="Graphic Design" marked="1">gd</a> / <a href="//boards.4chan.org/hc/catalog" title="Hardcore" marked="1">hc</a> /
+<a href="//boards.4channel.org/his/catalog" title="History &amp; Humanities" marked="1">his</a> / <a href="//boards.4channel.org/int/catalog" title="International" marked="1">int</a>
+/ <a href="//boards.4channel.org/jp/catalog" title="Otaku Culture" marked="1">jp</a> / <a href="//boards.4channel.org/lit/catalog" title="Literature" marked="1">lit</a>
+/ <a href="//boards.4channel.org/mlp/catalog" title="Pony" marked="1">mlp</a> / <a href="//boards.4channel.org/mu/catalog" title="Music" marked="1">mu</a>
+/ <a href="//boards.4channel.org/n/catalog" title="Transportation" marked="1">n</a> / <a href="//boards.4channel.org/news/catalog" title="Current News" marked="1">news</a>
+/ <a href="//boards.4channel.org/out/catalog" title="Outdoors" marked="1">out</a> / <a href="//boards.4channel.org/po/catalog" title="Papercraft &amp; Origami" marked="1">po</a>
+/ <a href="//boards.4chan.org/pol/catalog" title="Politically Incorrect" marked="1">pol</a> / <a href="//boards.4channel.org/qst/catalog" title="Quests" marked="1">qst</a>
+/ <a href="//boards.4channel.org/sci/catalog" title="Science &amp; Math" marked="1">sci</a> / <a href="//boards.4chan.org/soc/catalog" title="Cams &amp; Meetups" marked="1">soc</a>
+/ <a href="//boards.4channel.org/sp/catalog" title="Sports" marked="1">sp</a> / <a href="//boards.4channel.org/tg/catalog" title="Traditional Games" marked="1">tg</a>
+/ <a href="//boards.4channel.org/toy/catalog" title="Toys" marked="1">toy</a> / <a href="//boards.4channel.org/trv/catalog" title="Travel" marked="1">trv</a>
+/ <a href="//boards.4channel.org/tv/catalog" title="Television &amp; Film" marked="1">tv</a> / <a href="//boards.4channel.org/vp/catalog" title="Pokémon" marked="1">vp</a>
+/ <a href="//boards.4channel.org/wsg/catalog" title="Worksafe GIF" marked="1">wsg</a> / <a href="//boards.4channel.org/wsr/catalog" title="Worksafe Requests" marked="1">wsr</a>
+/ <a href="//boards.4channel.org/x/catalog" title="Paranormal" marked="1">x</a>] <span class="custom-menu-ctrl">[<a data-cm-edit="" title="Edit Menu" href="#" marked="1">Edit</a>]</span></span>
+<span id="navbotright">[<a href="javascript:void(0);" id="settingsWindowLinkBot" marked="1">Settings</a>] [<a href="/search" title="Search" marked="1">Search</a>] [<a href="//www.4chan.org/" target="_top" marked="1">Home</a>]
+</span></div>`;
+}
