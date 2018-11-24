@@ -2,7 +2,7 @@
 // @name         chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread
 // @author       You
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
@@ -31,6 +31,7 @@
         addCollapseAndExpand();
         addTessellationQuotes();
         addQuotedPostsContainer();
+        addTessellationThread();
     }, 3000);
 //});
 
@@ -39,6 +40,32 @@
   //dome nodes themselves, or just store all of the HTML before, revert on option, and re-compute each time, possibly also add to barchive, also add for within posts themselves
 
 //image size slider - a slider appears when hovering or clicking over new span in image data row in post - has a slider, and position on slider determines the size of the full image via %
+
+function addTessellationThread() {
+  let newSpan = document.createElement("span");
+  newSpan.innerText = "[Tessellate Thread]";
+  newSpan.classList.add("tessellateThread");
+  newSpan.style.paddingLeft = "6px";
+  newSpan.style.paddingRight = "1px";
+  newSpan.style.fontSize = "11px";
+  newSpan.style.color = "rgb(46, 54, 144)";
+  document.querySelector(".opContainer").querySelector(".postInfo.desktop").insertBefore(newSpan, document.querySelector(".opContainer").querySelector(".postMenuBtn"));
+  newSpan.addEventListener("click", tessellateThread);
+}
+
+function tessellateThread(e) {
+  let node = e.target;
+  let threadNode = document.querySelector(".thread");
+  if (threadNode.style.display !== "flex") {
+    threadNode.style.display = "flex";
+    threadNode.style.flexWrap = "wrap";
+    node.style.opacity = "0.55";
+  } else {
+    threadNode.style.display = "";
+    threadNode.style.flexWrap = "";
+    node.style.opacity = "1.0";
+  }
+}
 
 function addTessellationQuotes() {
   Array.from(document.getElementsByClassName("postInfo")).forEach(el => {
