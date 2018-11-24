@@ -2,10 +2,12 @@
 // @name         chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards
 // @author       You
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
+// @match        https://boards.4channel.org/*/thread/*
+// @match        http://boards.4channel.org/*/thread/*
 // @grant        none
 // ==/UserScript==
 //window.onload(function() {
@@ -161,10 +163,10 @@ function qEV(e, node=e.target) {
     //adding to parent post
     if (node.parentNode.parentNode.parentNode.parentNode.children[2].classList.contains("file")) {
         Array.from(node.parentNode.parentNode.parentNode.parentNode.children[3].children).filter(el => el.classList.contains("quotedPostsContainer"))[0].appendChild(newPost);
-        setTimeout(function() {node.parentNode.parentNode.parentNode.parentNode.children[3].children[0].remove();});
+        if (JSON.parse(localStorage.getItem("4chan-settings")).inlineQuotes) setTimeout(function() {node.parentNode.parentNode.parentNode.parentNode.children[3].children[0].remove();});
     } else {
         Array.from(node.parentNode.parentNode.parentNode.parentNode.children[2].children).filter(el => el.classList.contains("quotedPostsContainer"))[0].appendChild(newPost);
-        setTimeout(function() {node.parentNode.parentNode.parentNode.parentNode.children[2].children[0].remove();});
+        if (JSON.parse(localStorage.getItem("4chan-settings")).inlineQuotes) setTimeout(function() {node.parentNode.parentNode.parentNode.parentNode.children[2].children[0].remove();});
     }
     //console.log("node just added", newPost);
     setTimeout(function(){newPost.style.display = "";}, 10);
