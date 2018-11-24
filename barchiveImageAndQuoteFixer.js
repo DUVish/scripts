@@ -2,7 +2,7 @@
 // @name         barchive image and quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  replaces thumbnails with full image or webm on click and inlines "quoted by" posts on click, can also remove posts and tessellate inlined posts
+// @description  replaces thumbnails with full image or webm on click and inlines "quoted by" posts on click, can also remove posts, tessellate inlined posts, tessellate entire thread, and expand/collapse all 'quoted by' posts
 // @author       You
 // @match        https://thebarchive.com/b/thread/*
 // @match        https://archived.moe/*/thread/*
@@ -10,16 +10,27 @@
 // ==/UserScript==
 
 Array.from($(".post_data")).forEach(el => {
-    el.innerHTML += '<span class="tessellatePost" style="font-size: 10.5px;position: relative;top: -2px;padding-left: 6px;color: #7fa5c6;opacity: 0.95;padding-right: 15px;">[Tessellate]</span>';
+    el.innerHTML += `<span class="expandAllQuotes" style="font-size: 10px;position: relative;top: -2px;padding-left: 1px;color: #7fa5c6;opacity: 0.95;padding-right: 0px;" title="Expand all 'quoted by' posts">[↓]</span>`;
 });
+
+Array.from($(".post_data")).forEach(el => {
+    el.innerHTML += `<span class="collapseAllQuotes" style="font-size: 10px;position: relative;top: -2px;padding-left: 3px;color: #7fa5c6;opacity: 0.95;padding-right: 6px;" title="Collapse all 'quoted by' posts">[↑]</span>`;
+});
+
+Array.from($(".post_data")).forEach(el => {
+    el.innerHTML += '<span class="tessellatePost" style="font-size: 10px;position: relative;top: -2px;padding-left: 4px;color: #7fa5c6;opacity: 0.95;padding-right: 13px;">[Tessellate]</span>';
+});
+
+document.querySelector(".post_data").innerHTML += '<span class="tessellateThread" style="font-size: 10px;position: relative;top: -2px;padding-left: 2px;color: #7fa5c6;opacity: 0.95;padding-right: 11px;">[Tessellate Thread]</span>';
 
 Array.from($(".post_data")).forEach(el => {
     el.children[8].children[0].style.paddingLeft = "0px";
     el.children[8].children[0].style.marginLeft = "-3px";
-    el.innerHTML += '<span class="postRemove" style="font-size: 9.5px;position: relative;top: -1px;padding-left: 5px;color: darkgrey;opacity: 0.45;">Remove</span>';
+    el.innerHTML += '<span class="postRemove" style="font-size: 9.5px;position: relative;top: -1px;padding-left: 3px;color: darkgrey;opacity: 0.45;">Remove</span>';
 });
 
 Array.from(document.querySelectorAll(".text")).forEach(el => el.innerHTML += '<span class="inlinedQuotesContainer"></span>');
+
 
 $(".postRemove").on("click", function(e) {
     postRemove(e, this);
@@ -34,6 +45,7 @@ function postRemove(e, node) {
 }
 
 function inOnClickFunc(e, node) {
+    e.preventDefault();
     backlinkClick(e, node);
     backlinkReset(e, node);
 }
@@ -44,6 +56,10 @@ document.querySelector("title").innerText = "/b/ - " + document.querySelector(".
 
 $(".tessellatePost").on("click", function(e) {
     tessellatePost(e, this);
+});
+
+$(".tessellateThread").on("click", function(e) {
+    tessellateThread(e, this);
 });
 
 function tessellatePost(e, node) {
@@ -58,8 +74,40 @@ function tessellatePost(e, node) {
     container.style.display = "";
     container.style.flexWrap = "";
     tesSpan.style.opacity = "0.95";
-    tesSpan.style.color = "#98c7f0";
+    tesSpan.style.color = "#7fa5c6";
   }
+}
+
+function tessellateThread(e, node) {
+  let container = document.querySelector(".posts");
+  let tesSpan = node;
+  if (container.style.display !== "flex") {
+    container.style.display = "flex";
+    container.style.flexWrap = "wrap";
+    tesSpan.style.opacity = "0.45";
+    tesSpan.style.color = "darkgrey";
+  } else {
+    container.style.display = "";
+    container.style.flexWrap = "";
+    tesSpan.style.opacity = "0.95";
+    tesSpan.style.color = "#7fa5c6";
+  }
+}
+
+$(".expandAllQuotes").on("click", function(e) {
+  expandAllQuotes(e, this);
+});
+
+$(".collapseAllQuotes").on("click", function(e) {
+  collapseAllQuotes(e, this);
+});
+
+function expandAllQuotes(e, node) {
+  Array.from(node.parentNode.parentNode.parentNode.querySelector(".backlink_list").children[0].children).filter(el => !el.classList.contains("clicked")).forEach(el => $(el).trigger("click"));
+}
+
+function collapseAllQuotes(e, node) {
+  Array.from(node.parentNode.parentNode.parentNode.querySelector(".backlink_list").children[0].children).filter(el => el.classList.contains("clicked")).forEach(el => $(el).trigger("click"));
 }
 
 function backlinkClick(e, node) {
@@ -98,6 +146,14 @@ function backlinkReset(e, node) {
     //$(".postRemove").on("click", function(e) {
     //    postRemove(e, node);
     //});
+    $(".expandAllQuotes").off();
+    $(".expandAllQuotes").on("click", function(e) {
+      expandAllQuotes(e, this);
+    });
+    $(".collapseAllQuotes").off();
+    $(".collapseAllQuotes").on("click", function(e) {
+      collapseAllQuotes(e, this);
+    });
 }
 
 $(".post_image").on("click", function(e) {
