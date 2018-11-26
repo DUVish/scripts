@@ -194,7 +194,7 @@ function settingClickHandler(e, node) {
             node.style.width = widthHeightArr[0] + "px";
             node.style.height = widthHeightArr[1] + "px";
         } else {
-            node.src = node.src.replace(/(\d+)(\.)(\w+)/, "$1s$2jpg").replace("image", "thumb");
+            node.src = node.parentNode.href || node.src.replace(/(\d+)(\.)(\w+)/, "$1s$2jpg").replace("image", "thumb");
             node.style.width = "";
             node.style.height = "";
         }
