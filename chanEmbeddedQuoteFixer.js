@@ -59,10 +59,12 @@ function tessellateThread(e) {
   if (threadNode.style.display !== "flex") {
     threadNode.style.display = "flex";
     threadNode.style.flexWrap = "wrap";
+    threadNode.style.maxWidth = "100%";
     node.style.opacity = "0.55";
   } else {
     threadNode.style.display = "";
     threadNode.style.flexWrap = "";
+    threadNode.style.maxWidth = "";
     node.style.opacity = "1.0";
   }
 }
@@ -230,7 +232,7 @@ function resetQLEV() {
   newSpanList.forEach(el => el.addEventListener("click", qSpanClick));
   Array.from(document.getElementsByClassName("postInfo desktop")).forEach(el => el.children[0].removeEventListener("click", postRemove));
   addRemoveCapability();
-  setTimeout(function() {addCollapseAndExpand();}, 100);
+  addCollapseAndExpand();
   let tesQuoteSpans = Array.from(document.getElementsByClassName("tessellateQuotes"));
   tesQuoteSpans.forEach(el => el.removeEventListener("click", tessellateQuotes));
   tesQuoteSpans.forEach(el => el.addEventListener("click", tessellateQuotes));
