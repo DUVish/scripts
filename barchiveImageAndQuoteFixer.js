@@ -82,11 +82,18 @@ function tessellateThread(e, node) {
   let container = document.querySelector(".posts");
   let tesSpan = node;
   if (container.style.display !== "flex") {
+    let threadImgBottomBound = document.querySelector(".thread_image_box").getBoundingClientRect().bottom;
+    let dividerTopBound = document.querySelector(".thread_tools_bottom").getBoundingClientRect().top;
+    let diff = threadImgBottomBound - dividerTopBound;
+    if (threadImgBottomBound > dividerTopBound)  document.querySelector(".thread_tools_bottom").style.paddingBottom = `${diff + 10}px`;
+    Array.from(document.getElementsByClassName("post_controls")).forEach(el => el.children[0].style.display = "none");
     container.style.display = "flex";
     container.style.flexWrap = "wrap";
     tesSpan.style.opacity = "0.45";
     tesSpan.style.color = "darkgrey";
   } else {
+    Array.from(document.getElementsByClassName("post_controls")).forEach(el => el.children[0].style.display = "");
+    document.querySelector(".thread_tools_bottom").style.paddingBottom = "";
     container.style.display = "";
     container.style.flexWrap = "";
     tesSpan.style.opacity = "0.95";
