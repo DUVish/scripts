@@ -33,7 +33,7 @@
         addQuotedPostsContainer();
         addTessellationThread();
         addThreadWidthToggle();
-    }, 3000);
+    }, 2500);
 //});
 
 //tessellation feature - move element all the way to the right, try and move up - if interfering with getBoundingClientRect in two axes, then move left, then try and move up again - repeat until both up and left are exhausted
@@ -85,7 +85,7 @@ function addThreadWidthToggle() {
 
 function toggleThreadWidth(e) {
   let node = e.target;
-  if (Number(node.style.opacity) > 0.95) {
+  if (Number(node.style.opacity) > 0.95 || !node.style.opacity) {
     document.querySelector(".thread").style.maxWidth = "100%";
     node.style.opacity = "0.55";
   } else {
