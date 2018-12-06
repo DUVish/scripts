@@ -32,6 +32,7 @@
         addTessellationQuotes();
         addQuotedPostsContainer();
         addTessellationThread();
+        addThreadWidthToggle();
     }, 3000);
 //});
 
@@ -65,6 +66,30 @@ function tessellateThread(e) {
     threadNode.style.display = "";
     threadNode.style.flexWrap = "";
     threadNode.style.maxWidth = "";
+    node.style.opacity = "1.0";
+  }
+}
+
+function addThreadWidthToggle() {
+  let newSpan = document.createElement("span");
+  newSpan.innerText = "[Toggle Thread Width]";
+  newSpan.classList.add("threadWidthToggle");
+  newSpan.style.paddingLeft = "6px";
+  newSpan.style.paddingRight = "1px";
+  newSpan.style.fontSize = "11px";
+  newSpan.style.color = "rgb(46, 54, 144)";
+  newSpan.title = "Toggle thread width to and from 100% viewport width (without tessellating)";
+  document.querySelector(".opContainer").querySelector(".postInfo.desktop").insertBefore(newSpan, document.querySelector(".opContainer").querySelector(".postMenuBtn"));
+  newSpan.addEventListener("click", toggleThreadWidth);
+}
+
+function toggleThreadWidth(e) {
+  let node = e.target;
+  if (Number(node.style.opacity) > 0.95) {
+    document.querySelector(".thread").style.maxWidth = "100%";
+    node.style.opacity = "0.55";
+  } else {
+    document.querySelector(".thread").style.maxWidth = "";
     node.style.opacity = "1.0";
   }
 }
