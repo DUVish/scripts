@@ -13,7 +13,13 @@ let scr = document.createElement("script");
 scr.src = "https://code.jquery.com/jquery-3.3.1.min.js";
 
 scr.onload = function() {
-    Array.from($(".tolink")).forEach(el => $(el).load(el.children[0].href + " article"));
+    let arr = Array.from($(".tolink"));
+
+    if (arr.length === 0) arr = Array.from($(".link"));
+
+    arr.forEach(el => $(el).load(el.children[0].href + " article"));
+
+    let chapters = arr.length;
 
     setTimeout(function() {
         Array.from($(".end")).forEach(el => el.remove());
@@ -23,7 +29,6 @@ scr.onload = function() {
 
 document.querySelector("head").appendChild(scr);
 
-let chapters = document.getElementsByClassName("tolink").length;
 
 for (let sheet of document.styleSheets) {
     sheet.disabled = true;
