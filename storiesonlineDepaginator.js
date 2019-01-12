@@ -13,18 +13,36 @@ let scr = document.createElement("script");
 scr.src = "https://code.jquery.com/jquery-3.3.1.min.js";
 
 scr.onload = function() {
-    let arr = Array.from($(".tolink"));
+    if (!document.querySelector(".pager")) {
+        let arr = Array.from($(".tolink"));
 
-    if (arr.length === 0) arr = Array.from($(".link"));
+        if (arr.length === 0) arr = Array.from($(".link"));
 
-    arr.forEach(el => $(el).load(el.children[0].href + " article"));
+        arr.forEach(el => $(el).load(el.children[0].href + " article"));
 
-    let chapters = arr.length;
+        let chapters = arr.length;
 
-    setTimeout(function() {
+        setTimeout(function() {
+            Array.from($(".end")).forEach(el => el.remove());
+            Array.from($(".date")).forEach(el => el.remove());
+        }, chapters * 1000);
+    } else {
+        let moreChapters = Number(document.querySelector(".pager").children[document.querySelector(".pager").children.length - 2].innerText);
+        for (let i = 1; i < moreChapters; i++) {
+            $.ajax({
+              type: "GET",
+              url: window.location.href + "?page=" + i.toString(),
+              async: false,
+              success: function(data) {
+                  $("article")[0].innerHTML += $($.parseHTML(data)).find("article")[0].innerHTML;
+              }
+            });
+        }
+        Array.from($(".pager")).forEach(el => el.remove());
+        Array.from($(".conTag")).forEach(el => el.remove());
+        Array.from($("header")).forEach((el, i) => {if (i !== 0) el.remove();});
         Array.from($(".end")).forEach(el => el.remove());
-        Array.from($(".date")).forEach(el => el.remove());
-    }, chapters * 1000);
+    }
 };
 
 document.querySelector("head").appendChild(scr);
