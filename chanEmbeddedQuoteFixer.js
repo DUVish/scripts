@@ -33,6 +33,7 @@
         addQuotedPostsContainer();
         addTessellationThread();
         addThreadWidthToggle();
+        addMediaZoom();
     }, 2500);
 //});
 
@@ -181,6 +182,125 @@ function qSpanClick(e) {
   e.preventDefault();
 }
 
+function addMediaZoom() {
+  Array.from(document.querySelectorAll(".fileText")).forEach(el => {
+    if (Array.from(el.children).filter(el => el.classList.contains("mediaSizeChange")).length === 0) {
+      let span = document.createElement("span");
+      span.classList.add("mediaSizeChange");
+      let spanBigger = document.createElement("span");
+      let spanSmaller = document.createElement("span");
+      let spanReset = document.createElement("span");
+      spanBigger.classList.add("mediaSizeIncrease");
+      spanSmaller.classList.add("mediaSizeDecrease");
+      spanReset.classList.add("mediaSizeReset");
+      spanBigger.innerText = "(++)";
+      spanSmaller.innerText = "(--)";
+      spanReset.innerText = "(Reset)";
+      spanBigger.style.color = "blue";
+      spanSmaller.style.color = "blue";
+      spanReset.style.color = "blue";
+      spanReset.style.fontSize = "10px";
+      span.innerHTML = `[ ${spanSmaller.outerHTML} Size ${spanBigger.outerHTML} - ${spanReset.outerHTML} ]`;
+      el.appendChild(span);
+      span.style.fontSize = "12px";
+      span.style.position = "relative";
+      span.style.bottom = "1px";
+      span.style.paddingRight = "4px";
+      span.style.paddingLeft = "4px";
+      spanReset.style.position = "relative";
+      spanReset.style.bottom = "1px";
+    }
+    let spanBigger = el.getElementsByClassName("mediaSizeIncrease")[0];
+    spanBigger.removeEventListener("click", mediaSizeIncrease);
+    let spanSmaller = el.getElementsByClassName("mediaSizeDecrease")[0];
+    spanSmaller.removeEventListener("click", mediaSizeDecrease);
+    let spanReset = el.getElementsByClassName("mediaSizeReset")[0];
+    spanReset.removeEventListener("click", mediaSizeReset);
+    spanBigger.addEventListener("click", mediaSizeIncrease);
+    spanSmaller.addEventListener("click", mediaSizeDecrease);
+    spanReset.addEventListener("click", mediaSizeReset);
+  });
+}
+
+function mediaSizeIncrease(e) {
+  let min = 0;
+  let max = Number(e.target.parentNode.parentNode.innerText.match(/\d+x\d+/)[0].split("x")[0]);
+  let fileDiv = e.target.parentNode.parentNode.parentNode;
+  if (Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO").length !== 0) {
+    let vidEl = Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO")[0];
+    let currentWidth = Number(vidEl.style.maxWidth.match(/\d+/));
+    currentWidth += 20;
+    if (currentWidth > max) {
+      vidEl.style.maxWidth = `${max}px`;
+    } else {
+      vidEl.style.maxWidth = `${currentWidth}px`;
+    }
+  } else {
+    if (fileDiv.classList.contains("image-expanded")) {
+      let img = Array.from(fileDiv.querySelectorAll("img")).filter(el => el.classList.contains("expanded-thumb"))[0];
+      if (img) {
+        let currentWidth = Number(img.style.maxWidth.match(/\d+/));
+        currentWidth += 20;
+        if (currentWidth > max) {
+          img.style.maxWidth = `${max}px}`;
+          currentWidth = max;
+        } else {
+          img.style.maxWidth = `${currentWidth}px`;
+        }
+      }
+    }
+  }
+}
+
+function mediaSizeDecrease(e) {
+  let min = 0;
+  let max = Number(e.target.parentNode.parentNode.innerText.match(/\d+x\d+/)[0].split("x")[0]);
+  let fileDiv = e.target.parentNode.parentNode.parentNode;
+  if (Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO").length !== 0) {
+    let vidEl = Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO")[0];
+    let currentWidth = Number(vidEl.style.maxWidth.match(/\d+/));
+    currentWidth -= 20;
+    if (currentWidth < 0) {
+      vidEl.style.maxWidth = `0px`;
+      currentWidth = 0;
+    } else {
+      vidEl.style.maxWidth = `${currentWidth}px`;
+    }
+  } else {
+    if (fileDiv.classList.contains("image-expanded")) {
+      let img = Array.from(fileDiv.querySelectorAll("img")).filter(el => el.classList.contains("expanded-thumb"))[0];
+      if (img) {
+        let currentWidth = Number(img.style.maxWidth.match(/\d+/));
+        currentWidth -= 20;
+        if (currentWidth < 0) {
+          img.style.maxWidth = `${max}px}`;
+        } else {
+          img.style.maxWidth = `${currentWidth}px`;
+        }
+      }
+    }
+  }
+}
+
+function mediaSizeReset(e) {
+  let width = Number(e.target.parentNode.parentNode.innerText.match(/\d+x\d+/)[0].split("x")[0]);
+  let height = Number(e.target.parentNode.parentNode.innerText.match(/\d+x\d+/)[0].split("x")[1]);
+  let fileDiv = e.target.parentNode.parentNode.parentNode;
+  if (Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO").length !== 0) {
+    let vidEl = Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO")[0];
+    vidEl.style.maxWidth = `${width}px`;
+    vidEl.style.maxHeight = `${height}px`;
+  } else {
+     if (fileDiv.classList.contains("image-expanded")) {
+      let img = Array.from(fileDiv.querySelectorAll("img")).filter(el => el.classList.contains("expanded-thumb"))[0];
+      if (img) {
+        img.style.maxWidth = `${width}px`;
+        img.style.maxHeight = `${height}px`;
+      }
+    }
+  }
+}
+
 function addRemoveCapability() {
   //turns all delete checkboxes to simply post removal buttons
   Array.from(document.getElementsByClassName("postInfo desktop")).forEach(el => el.children[0].addEventListener("click", postRemove));
@@ -201,9 +321,7 @@ function qEV(e, node=e.target) {
 
     //finding post and constructing new post
     let postsArr = Array.from(document.getElementsByClassName("postNum desktop")).filter(el => el.children[1].innerText === node.innerText.slice(2));
-    //console.log("postsAArr", postsArr);
     let post = postsArr[0].parentNode.parentNode.parentNode;
-    //console.log("particular post from postArr", post.outerHTML);
     let newPost = post.cloneNode(true);
     //newPost.outerHTML = post.outerHTML;
     newPost.classList.add("inlined");
@@ -212,7 +330,6 @@ function qEV(e, node=e.target) {
     newPost.style.marginTop = "10px";
     newPost.children[1].style.border = "1px solid #a1b7c899";
     newPost.children[0].style.display = "none";
-    //console.log("newPost before adding", newPost.outerHTML, "oldPost", post.outerHTML, "boolean", newPost.outerHTML === post.outerHTML);
 
     //adding to parent post
     if (node.parentNode.parentNode.parentNode.parentNode.children[2].classList.contains("file")) {
@@ -222,7 +339,6 @@ function qEV(e, node=e.target) {
         Array.from(node.parentNode.parentNode.parentNode.parentNode.children[2].children).filter(el => el.classList.contains("quotedPostsContainer"))[0].appendChild(newPost);
         if (JSON.parse(localStorage.getItem("4chan-settings")).inlineQuotes) setTimeout(function() {node.parentNode.parentNode.parentNode.parentNode.children[2].children[0].remove();});
     }
-    //console.log("node just added", newPost);
     setTimeout(function(){newPost.style.display = "";}, 10);
 
     //resetting event listeners
@@ -249,7 +365,6 @@ function resetQLEV() {
         try {
           if (el.children.length > 0 && el.children[0].classList.contains("quotelink")) return true;
         } catch(error) {
-          //console.log("custom error in span EL", el);
           return false;
         }
     });
@@ -263,6 +378,7 @@ function resetQLEV() {
   tesQuoteSpans.forEach(el => el.addEventListener("click", tessellateQuotes));
   addTessellationQuotes();
   addQuotedPostsContainer();
+  addMediaZoom();
 }
 
 let observer = new MutationObserver(resetQLEV);
