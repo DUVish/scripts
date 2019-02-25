@@ -34,6 +34,8 @@
         addTessellationThread();
         addThreadWidthToggle();
         addMediaZoom();
+        addColorPostsThread();
+        addColorPosts();
     }, 2500);
 //});
 
@@ -311,6 +313,85 @@ function postRemove(e) {
   e.target.parentNode.parentNode.parentNode.remove();
 }
 
+function addColorPostsThread() {
+  let btn = document.querySelector(".op").querySelector(".postMenuBtn");
+  let span = document.createElement("span");
+  span.classList.add("colorChange");
+  span.title = "Color all posts in thread";
+  let colorOn = document.createElement("span");
+  let colorOff = document.createElement("span");
+  colorOn.classList.add("colorOnThread");
+  colorOff.classList.add("colorOffThread");
+  colorOn.innerText = "Color Posts";
+  colorOff.innerText = "Off";
+  span.innerHTML = `[${colorOn.outerHTML} | ${colorOff.outerHTML}]`;
+  btn.parentNode.insertBefore(span, btn);
+  span.style.paddingLeft = "6px";
+  span.style.paddingRight = "1px";
+  span.style.fontSize = "11px";
+  span.style.color = "rgb(46, 53, 144)";
+  document.querySelector(".colorOnThread").addEventListener("click", colorPostsThreadOn);
+  document.querySelector(".colorOffThread").addEventListener("click", colorPostsThreadOff);
+}
+
+function colorPostsThreadOn(e) {
+  Array.from(document.querySelectorAll(".post.reply")).forEach(el => {
+    el.style.backgroundColor = `rgb(${Math.random() > 0.5 ? 240 - (Math.random() * 20) : 240 + (Math.random() * 20)}, 
+    ${Math.random() > 0.5 ? 224 - (Math.random() * 20) : 224 + (Math.random() * 20)}, 
+    ${Math.random() > 0.5 ? 214 - (Math.random() * 20) : 214 + (Math.random() * 20)})`;
+  });
+}
+
+function colorPostsThreadOff(e) {
+  Array.from(document.querySelectorAll(".post.reply")).forEach(el => {
+    el.style.backgroundColor = `rgb(240, 224, 214)`; 
+  });
+}
+
+function addColorPosts() {
+  Array.from(document.querySelectorAll(".postInfo.desktop")).forEach((el, i) => {
+    if (i === 0) return;
+    if (Array.from(el.children).filter(child => child.classList.contains("colorChange")).length === 0) {
+      let span = document.createElement("span");
+      span.classList.add("colorChange");
+      span.title = "Color all inlined posts within this one";
+      let colorOn = document.createElement("span");
+      let colorOff = document.createElement("span");
+      colorOn.classList.add("colorOnPost");
+      colorOff.classList.add("colorOffPost");
+      colorOn.innerText = "Color Posts";
+      colorOff.innerText = "Off";
+      span.innerHTML = `[${colorOn.outerHTML} | ${colorOff.outerHTML}]`;
+      el.insertBefore(span, el.querySelector(".postMenuBtn"));
+      span.style.paddingLeft = "6px";
+      span.style.paddingRight = "1px";
+      span.style.fontSize = "11px";
+      span.style.color = "rgb(46, 53, 144)";
+    }
+    let colorOn = el.querySelector(".colorOnPost");
+    let colorOff = el.querySelector(".colorOffPost");
+    colorOn.removeEventListener("click", colorPostsPostOn);
+    colorOn.addEventListener("click", colorPostsPostOn);
+    colorOff.removeEventListener("click", colorPostsPostOff);
+    colorOff.addEventListener("click", colorPostsPostOff);
+  });
+}
+
+function colorPostsPostOn(e) {
+  console.log("colorPOstsPoston", e.target);
+  Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
+    el.style.backgroundColor = `rgb(${Math.random() > 0.5 ? 240 - (Math.random() * 20) : 240 + (Math.random() * 20)}, 
+    ${Math.random() > 0.5 ? 224 - (Math.random() * 20) : 224 + (Math.random() * 20)}, 
+    ${Math.random() > 0.5 ? 214 - (Math.random() * 20) : 214 + (Math.random() * 20)})`;
+  });
+}
+
+function colorPostsPostOff(e) {
+  Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
+    el.style.backgroundColor = `rgb(240, 224, 214)`;
+  });
+}
+
 function qEV(e, node=e.target) {
   //console.log("quote clicked.");
   e.preventDefault();
@@ -379,6 +460,7 @@ function resetQLEV() {
   addTessellationQuotes();
   addQuotedPostsContainer();
   addMediaZoom();
+  addColorPosts();
 }
 
 let observer = new MutationObserver(resetQLEV);
