@@ -23,14 +23,36 @@ Array.from($(".post_data")).forEach(el => {
 
 document.querySelector(".post_data").innerHTML += '<span class="tessellateThread" style="font-size: 10px;position: relative;top: -2px;padding-left: 2px;color: #7fa5c6;opacity: 0.95;padding-right: 11px;">[Tessellate Thread]</span>';
 
+document.querySelector(".post_data").innerHTML += '<span class="colorPosts" style="font-size: 10px;position: relative;top: -2px;padding-left: 2px;color: #7fa5c6;opacity: 0.95;padding-right: 11px;" title="Color all posts in thread">[<span class="colorOn">Color Posts</span> | <span class="colorOff">Off</span>]</span>';
+
+Array.from($(".post_data")).forEach((el, i) => {
+    if (i === 0) return;
+    el.innerHTML += '<span class="colorPosts" style="font-size: 10px;position: relative;top: -2px;padding-left: 0px;color: #7fa5c6;opacity: 0.95;padding-right: 8px;right:2px" title="Color all posts in thread">[<span class="colorPostOn">Color Posts</span> | <span class="colorPostOff">Off</span>]</span>';
+});
+
 Array.from($(".post_data")).forEach(el => {
     el.children[8].children[0].style.paddingLeft = "0px";
     el.children[8].children[0].style.marginLeft = "-3px";
-    el.innerHTML += '<span class="postRemove" style="font-size: 9.5px;position: relative;top: -1px;padding-left: 3px;color: darkgrey;opacity: 0.45;">Remove</span>';
+    el.innerHTML += '<span class="postRemove" style="font-size: 9.5px;position: relative;top: -2px;padding-left: 3px;color: darkgrey;opacity: 0.45;">Remove</span>';
 });
 
 Array.from(document.querySelectorAll(".text")).forEach(el => el.innerHTML += '<span class="inlinedQuotesContainer"></span>');
 
+$(".colorOn").on("click", function(e) {
+  Array.from(document.getElementsByClassName("post_wrapper")).forEach(el => {el.style.backgroundColor = `rgb(${Math.floor(Math.random() * 16)}, ${Math.floor(Math.random() * 16)}, ${Math.floor(Math.random() * 16)})`;});
+});
+
+$(".colorOff").on("click", function(e) {
+  Array.from(document.getElementsByClassName("post_wrapper")).forEach(el => {el.style.backgroundColor = `#282a2e`;});
+});
+
+$(".colorPostOn").on("click", function(e) {
+  Array.from(e.target.parentNode.parentNode.parentNode.parentNode.querySelectorAll(".post_wrapper")).forEach(el => {el.style.backgroundColor = `rgb(${Math.floor(Math.random() * 16)}, ${Math.floor(Math.random() * 16)}, ${Math.floor(Math.random() * 16)})`;});
+});
+
+$(".colorPostOff").on("click", function(e) {
+  Array.from(e.target.parentNode.parentNode.parentNode.parentNode.querySelectorAll(".post_wrapper")).forEach(el => {el.style.backgroundColor = `#282a2e`;});
+});
 
 $(".postRemove").on("click", function(e) {
     postRemove(e, this);
