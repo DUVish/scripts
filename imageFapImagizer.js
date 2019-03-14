@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         IF picture fixer
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  changes thumbnail href to full images, fixing option for those that don't fit pattern
 // @author       You
 // @match        https://www.imagefap.com/pictures/*
-// @grant        https://code.jquery.com/jquery-2.2.4.js
+// @grant        https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // ==/UserScript==
 
 /*
@@ -31,12 +31,13 @@ Array.from(document.getElementsByClassName("fixImg")).forEach((el, i) => el.addE
   //console.log("url", cache[i]);
   $.ajax({
     type: "GET",
-    url: cache[i],
+    url: el.parentNode.parentNode.parentNode.parentNode.querySelector("a").href,
     success: function(data) {
-      let newURL = data.match(/https:\/\/x\.imagefapusercontent\.com\/u\/\w+\/\d+\/\d+\/^[.]+\.\w+/);
+      //let newURL = data.match(/https:\/\/x\.imagefapusercontent\.com\/u\/\w+\/\d+\/\d+\/w+\.\w+/);
+      let newURL = data.match(/<noscript[\s\S]+<img id="mainPhoto".+src="([^"]+)"/)[1];
       if (newURL === null) el.innerText = "Sorry, error!";
       else {
-        el.parentNode.parentNode.parentNode.parentNode.children[0].children[0].children[0].href = newURL;
+        el.parentNode.parentNode.parentNode.parentNode.querySelector("a").href = newURL;
         el.innerText = "Fixed!";
       }
     },
