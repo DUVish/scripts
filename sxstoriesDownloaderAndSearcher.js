@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         sexstories.com stories downloader and searcher
+// @name         sxstories stories downloader and searcher
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  from any author's profile, can select stories to download in a zip or as a series, can also search stories and display frequency of search terms
-// @author       DUVish
+// @description  zips selected stories, in order, downloads to harddrive, can also search stories and display frequency of search terms
+// @author       You
 // @match        https://www.sexstories.com/profile*/*
 // @grant        none
 // ==/UserScript==
@@ -197,6 +197,7 @@ ${bodyStr}
       let bodyStr = "";
       let lastTitle = "";
       let firstTitle = "";
+      let anchorsStr = "";
       Array.from(document.querySelectorAll(".checkOrder:checked")).sort((a, b) => Number(a.parentNode.children[1].innerText) - Number(b.parentNode.children[1].innerText)).forEach((el, idx) => {
         let link = el.parentNode.parentNode.children[0].children[0].href;
         $.ajax({
@@ -209,12 +210,13 @@ ${bodyStr}
             localTitleStr = $($(data).find(".story_info")[0]).find("h2")[0].innerText.trim().match(/[^\n]+/)[0].trim();
             localTagsStr = $($(data).find(".story_info")[0]).find(".top_info")[0].innerText.trim();
             if (idx === 0) firstTitle = localTitleStr;
+            anchorsStr += `<a href="#${idx}" style="text-align:center;">${localTitleStr}</a><br>`;
             bodyStr += `
-<div style="text-align:center;font-size: 22px;">
+<div style="text-align:center;font-size: 22px;" id="${idx}">
 ${localTitleStr}
 </div>
 <br>
-<div style="text-align:center;font-size: 18px;font-style: italic">
+<div style="text-align:center;font-size: 18px;font-style: italic;">
 ${localDescStr}
 </div>
 <br>
@@ -238,10 +240,15 @@ ${localBodyStr}
 <title>${firstTitle} - ${lastTitle}</title>
 </head>
 <body>
+<div style="text-align:center;font-size: 24px;">Table of Contents</div>
+<br>
+<div style="font-size: 15px; width: 100%; text-align: center; line-height: 1.6">${anchorsStr}</div>
+<br>
+<br>
 ${bodyStr}
 </body>
 `;
       let blob = new Blob([htmlDoc], {type: "text/plain;charset=utf8"});
-      saveAs(blob, `${firstTitle} - ${lastTitle}.html`);
+      saveAs(blob, `${firstTitle} - ${lastTitle} (${currentNumberGlobal - 1} Chapters).html`);
     });
 }
