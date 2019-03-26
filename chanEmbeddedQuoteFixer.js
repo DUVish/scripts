@@ -36,6 +36,7 @@
         addMediaZoom();
         addColorPostsThread();
         addColorPosts();
+        setPostColor();
     }, 2500);
 //});
 
@@ -43,7 +44,8 @@
   //repeat for all posts - tesselation would not just add display: flex and flex-wrap:wrap to thread container, but also margin/-margin to each individual post - can either add some caching capability by storing data on
   //dome nodes themselves, or just store all of the HTML before, revert on option, and re-compute each time, possibly also add to barchive, also add for within posts themselves
 
-//image size slider - a slider appears when hovering or clicking over new span in image data row in post - has a slider, and position on slider determines the size of the full image via %
+var postColor = "";
+const colorDiff = 16;
 
 function addTessellationThread() {
   let newSpan = document.createElement("span");
@@ -303,6 +305,10 @@ function mediaSizeReset(e) {
   }
 }
 
+function addYTSizeChangeCapability() {
+  //change yt size
+}
+
 function addRemoveCapability() {
   //turns all delete checkboxes to simply post removal buttons
   Array.from(document.getElementsByClassName("postInfo desktop")).forEach(el => el.children[0].addEventListener("click", postRemove));
@@ -311,6 +317,17 @@ function addRemoveCapability() {
 function postRemove(e) {
   e.preventDefault();
   e.target.parentNode.parentNode.parentNode.remove();
+}
+
+function setPostColor() {
+  if (!postColor) {
+    if (document.querySelectorAll(".post.reply").length > 0) {
+      let post = document.querySelector(".post.reply");
+      let rgbStr = window.getComputedStyle(post).backgroundColor;
+      let matches = rgbStr.match(/rgb\((\d+),\s?(\d+),\s?(\d+)\)/i);
+      postColor = {r: Number(matches[1]), g: Number(matches[2]), b: Number(matches[3])};
+    }
+  }
 }
 
 function addColorPostsThread() {
@@ -336,15 +353,15 @@ function addColorPostsThread() {
 
 function colorPostsThreadOn(e) {
   Array.from(document.querySelectorAll(".post.reply")).forEach(el => {
-    el.style.backgroundColor = `rgb(${Math.random() > 0.5 ? 240 - (Math.random() * 20) : 240 + (Math.random() * 20)}, 
-    ${Math.random() > 0.5 ? 224 - (Math.random() * 20) : 224 + (Math.random() * 20)}, 
-    ${Math.random() > 0.5 ? 214 - (Math.random() * 20) : 214 + (Math.random() * 20)})`;
+    el.style.backgroundColor = `rgb(${Math.random() > 0.5 ? postColor.r - (Math.random() * colorDiff) : postColor.r + (Math.random() * colorDiff)},
+    ${Math.random() > 0.5 ? postColor.g - (Math.random() * colorDiff) : postColor.g + (Math.random() * colorDiff)},
+    ${Math.random() > 0.5 ? postColor.b - (Math.random() * colorDiff) : postColor.b + (Math.random() * colorDiff)})`;
   });
 }
 
 function colorPostsThreadOff(e) {
   Array.from(document.querySelectorAll(".post.reply")).forEach(el => {
-    el.style.backgroundColor = `rgb(240, 224, 214)`; 
+    el.style.backgroundColor = `rgb(${postColor.r}, ${postColor.g}, ${postColor.b})`;
   });
 }
 
@@ -352,6 +369,7 @@ function addColorPosts() {
   Array.from(document.querySelectorAll(".postInfo.desktop")).forEach((el, i) => {
     if (i === 0) return;
     if (Array.from(el.children).filter(child => child.classList.contains("colorChange")).length === 0) {
+      el.parentNode.dataset.originalColor = window.getComputedStyle(el).backgroundColor;
       let span = document.createElement("span");
       span.classList.add("colorChange");
       span.title = "Color all inlined posts within this one";
@@ -378,17 +396,17 @@ function addColorPosts() {
 }
 
 function colorPostsPostOn(e) {
-  console.log("colorPOstsPoston", e.target);
+  //console.log("colorPostsPoston", e.target);
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
-    el.style.backgroundColor = `rgb(${Math.random() > 0.5 ? 240 - (Math.random() * 20) : 240 + (Math.random() * 20)}, 
-    ${Math.random() > 0.5 ? 224 - (Math.random() * 20) : 224 + (Math.random() * 20)}, 
-    ${Math.random() > 0.5 ? 214 - (Math.random() * 20) : 214 + (Math.random() * 20)})`;
+    el.style.backgroundColor = `rgb(${Math.random() > 0.5 ? postColor.r - (Math.random() * colorDiff) : postColor.r + (Math.random() * colorDiff)},
+    ${Math.random() > 0.5 ? postColor.g - (Math.random() * colorDiff) : postColor.g + (Math.random() * colorDiff)},
+    ${Math.random() > 0.5 ? postColor.b - (Math.random() * colorDiff) : postColor.b + (Math.random() * colorDiff)})`;
   });
 }
 
 function colorPostsPostOff(e) {
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
-    el.style.backgroundColor = `rgb(240, 224, 214)`;
+    el.style.backgroundColor = `rgb(${postColor.r}, ${postColor.g}, ${postColor.b})`;
   });
 }
 
@@ -461,6 +479,7 @@ function resetQLEV() {
   addQuotedPostsContainer();
   addMediaZoom();
   addColorPosts();
+  setPostColor();
 }
 
 let observer = new MutationObserver(resetQLEV);
