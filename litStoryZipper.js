@@ -43,8 +43,31 @@ background-color: #9bc7ff !important;
 .customSaveBtn:active {
 background-color: #56a0ff !important;
 }
+.selectAllBtn:hover {
+background-color: #9bc7ff !important;
+}
+.selectAllBtn:active {
+background-color: #56a0ff !important;
+}
+.titleSort, .ratingSort, .categorySort, .dateSort {
+background-color: antiquewhite;
+margin: 0px 5px;
+padding: 5px 11px;
+border-radius: 8px;
+}
+.titleSort:hover, .ratingSort:hover, .categorySort:hover, .dateSort:hover {
+background-color: #ffe2ba;
+}
+.titleSort:active, .ratingSort:active, .categorySort:active, .dateSort:active {
+background-color: #ffd499;
+}
+.sortText {
+font-size: 15px;
+align-self: center;
+}
 </style>
 `;
+    Array.from(document.querySelectorAll(".root-story, .ser-ttl, .sl")).forEach((el, i) => el.dataset.idx = i);
 
     Array.from($(".root-story")).forEach(el => el.innerHTML += `<div style="min-width: 120px;position: relative;line-height: 40px;left: 10px;">Save Story: <input class="customSave" style="position: relative;top: 2px;" type="checkbox"></div>`);
 
@@ -53,7 +76,12 @@ background-color: #56a0ff !important;
     Array.from($(".ser-ttl")).forEach(el => el.innerHTML += `<div style="min-width: 120px;position: relative;line-height: 40px;left: 10px;">Save Series: <input class="customSaveSeries" style="position: relative;top: 2px;" type="checkbox"></div>`);
 
 
-    Array.from(document.querySelectorAll("td")).filter(el => el.innerText === "STORY SUBMISSIONS")[0].parentNode.innerHTML += `<div class="customSaveBtn" style="width: 125px;position: relative;top: 0px;left: 135px;border-radius:8px;background-color: #c6dfff;text-align: center;height: 22px;padding-top: 5px;">Save Selected to Zip</div>`;
+    Array.from(document.querySelectorAll("td")).filter(el => el.innerText === "STORY SUBMISSIONS")[0].parentNode.innerHTML += `<div style="display: flex;justify-content: flex-end;"><div class="customSaveBtn" style="width: 125px;position: relative;top: 0px;left: 485px;border-radius:8px;background-color: #c6dfff;text-align: center;height: 22px;padding-top: 5px;margin-right: 20px">Save Selected to Zip</div>
+    <div class="selectAllBtn" style="width: 155px;position: relative;top: 0px;right: -160px;border-radius:8px;background-color: #c6dfff;text-align: center;height: 22px;padding-top: 5px;margin-left: 10px">Select All (Series and Stories)</div></div>`;
+
+    document.querySelector(".selectAllBtn").addEventListener("click", function(e) {
+      Array.from(document.querySelectorAll(".customSave, .customSaveSeries")).filter(el => el.parentNode.innerText.match(/Series|Story/i)).forEach(el => el.click());
+    });
 
     document.querySelector(".customSaveBtn").addEventListener("click", function(e) {
         Array.from(document.querySelectorAll(".customSave:checked")).forEach(el => {
@@ -191,4 +219,51 @@ ${bodyStrWhole}
             saveAs(blob, `${author}'s Stories`);
         });
     });
+
+  //sorting logic
+  Array.from(document.querySelectorAll("tbody"))[6].children[2].innerHTML += `<div class="sortingContainer" style="display: flex; justify-content: space-between;">
+    <span class="sortText">Sort by: </span><div class="titleSort sorting">Reset</div><div class="ratingSort sorting">Rating</div><div class="categorySort sorting">Category</div><div class="dateSort sorting">Date</Date>
+  </div>`;
+
+  Array.from(document.querySelectorAll(".sorting")).forEach(el => el.addEventListener("click", function(e) {
+    let collection = Array.from(document.querySelectorAll(".root-story, .sl"));
+    switch(e.target.innerText) {
+      case "Reset":
+        collection = Array.from(document.querySelectorAll(".root-story, .sl, .ser-ttl"));
+        collection.sort((a, b) => Number(a.dataset.idx) - Number(b.dataset.idx));
+        break;
+      case "Rating":
+        collection.sort((a, b) => Number(a.children[0].innerText.slice(-5).slice(0, 4)) - Number(b.children[0].innerText.slice(-5).slice(0, 4)));
+        break;
+      case "Category":
+        let store = {};
+        collection.forEach(el => {
+          if (store[el.children[2].innerText.trim()]) store[el.children[2].innerText.trim()] = store[el.children[2].innerText.trim()].concat(el);
+          else store[el.children[2].innerText.trim()] = [el];
+        });
+        collection = [];
+        Object.keys(store).sort().forEach(key => collection = collection.concat(store[key].sort((a, b) => Number(a.dataset.idx) - Number(b.dataset.idx))));
+        break;
+      case "Date":
+        collection.sort((a, b) => compareDates(b.children[3].innerText, a.children[3].innerText));
+        break;
+    }
+    collection.forEach(el => el.parentNode.appendChild(el));
+  }));
+}
+
+function compareStrings(str1, str2) {
+  let shorterStr = str1.length > str2.length ? str2 : str1;
+  for (let i = 0; i < shorterStr.length; i++) {
+    if (str1.toLowerCase().charCodeAt(i) > str2.toLowerCase().charCodeAt(i)) return false;
+  }
+  return true;
+}
+
+function compareDates(strDate1, strDate2) {
+  let arr1 = strDate1.split("/").map(el => Number(el));
+  let arr2 = strDate2.split("/").map(el => Number(el));
+  let num1 = (arr1[2] * 10000) + (arr1[0] * 100) + (arr1[0]);
+  let num2 = (arr2[2] * 10000) + (arr2[0] * 100) + (arr2[0]);
+  return num1 > num2 ? false : true;
 }
