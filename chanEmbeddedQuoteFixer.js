@@ -1,15 +1,18 @@
 // ==UserScript==
-// @name         chan embedded quote fixer
+// @name         4chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread
-// @author       You
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread, can color posts to help keep track of embedded conversations, can zoom in/out with media, can hide extra options via toggle, can also manually drag posts around via toggle in OP
+// @author       DUVish
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
 // @match        https://boards.4channel.org/*/thread/*
 // @match        http://boards.4channel.org/*/thread/*
 // @grant        none
 // ==/UserScript==
+
+document.querySelector("head").innerHTML += `<style>div.post {overflow: visible}</style>`;
+
 //window.onload(function() {
     setTimeout(function() {
         let quotesList = Array.from(document.getElementsByClassName("quotelink")).filter(node => window.getComputedStyle(node).getPropertyValue("font-size") === "10.6667px");
@@ -37,6 +40,8 @@
         addColorPostsThread();
         addColorPosts();
         setPostColor();
+        addCollapseExtraNodesToggle();
+        addPostsDraggableToggleThread();
     }, 2500);
 //});
 
@@ -45,7 +50,7 @@
   //dome nodes themselves, or just store all of the HTML before, revert on option, and re-compute each time, possibly also add to barchive, also add for within posts themselves
 
 var postColor = "";
-const colorDiff = 16;
+const colorDiff = 18;
 
 function addTessellationThread() {
   let newSpan = document.createElement("span");
@@ -55,8 +60,65 @@ function addTessellationThread() {
   newSpan.style.paddingRight = "1px";
   newSpan.style.fontSize = "11px";
   newSpan.style.color = "rgb(46, 54, 144)";
+  newSpan.style.opacity = "1";
   document.querySelector(".opContainer").querySelector(".postInfo.desktop").insertBefore(newSpan, document.querySelector(".opContainer").querySelector(".postMenuBtn"));
   newSpan.addEventListener("click", tessellateThread);
+}
+
+function tessellateThreadAlgorithmic(e) {
+  let node = e.target;
+  let threadNode = document.querySelector(".thread");
+  let posts =  Array.from(document.querySelectorAll(".post.reply"));
+  if (e.target.style.opacity === "1") {
+    //threadNode.style.maxWidth = "100%";
+    //threadNode.style.display = "flex";
+    //threadNode.style.flexWrap = "wrap";
+    node.style.opacity = "0.55";
+    Array.from(document.querySelectorAll(".sideArrows")).forEach(el => {el.style.opacity = "0"; el.style.zIndex = "-1";});
+    posts.forEach(el => {el.style.position = "relative"; el.style.bottom = "0px"; el.style.top = "0px"; el.style.left = "0px"; el.style.right = "0px";});
+    let topBound = Math.floor(document.querySelector(".postContainer.opContainer").getBoundingClientRect().bottom + window.scrollY);
+    let leftBound = 24;
+    //console.log("before top-level iteration", topBound, leftBound);
+    posts.forEach((post, postIdx) => {
+      if (postIdx === 0) return;
+      //post.style.left = document.documentElement.clientWidth - post.getBoundingClientRect().right;
+      let beginningTop = post.getBoundingClientRect().top + window.scrollY;
+      let currentBottomDiff =  0;
+      let currentRightDiff =  0;
+      let currentLeftDiff =  0;
+      let currentTopDiff =  0;
+      let currentLeftBound = document.documentElement.clientWidth - post.getBoundingClientRect().right;
+      //console.log("before first while loop", beginningTop, currentLeftBound);
+      //console.log("collection before while loop", posts, posts.slice(0, postIdx));
+      while(!intersectionCheck(post.getBoundingClientRect().top + window.scrollY - currentBottomDiff, currentLeftBound, posts.slice(0, postIdx), topBound, leftBound, post)) {
+        currentBottomDiff += 2;
+        //post.style.bottom = `${Number(post.style.bottom.match(/(\d+)px/)[1]) + 2}px`;
+      }
+      post.style.bottom = `${Number(post.style.bottom.match(/(\d+)px/)[1]) + currentBottomDiff}px`;
+      let currentTopBound = beginningTop + window.scrollY - currentBottomDiff;
+      while(!intersectionCheck(currentTopBound, currentLeftBound - currentRightDiff, posts.slice(0, postIdx), topBound, leftBound, post)) {
+        //post.style.right = `${Number(post.style.right.match(/(\d+)px/)[1]) + 2}px`;
+        currentRightDiff += 2;
+      }
+      post.style.left = `${Number(post.style.left.match(/(\d+)px/)[1]) - currentRightDiff + currentLeftBound}px`;
+    });
+  } else {
+    //undo
+    node.style.opacity = "1";
+    threadNode.style.maxWidth = "";
+    Array.from(document.querySelectorAll(".sideArrows")).forEach(el => {el.style.opacity = "1"; el.style.zIndex = "0";});
+    posts.forEach(el => {el.style.position = "unset"; el.style.bottom = "0px"; el.style.top = "0px"; el.style.left = "0px"; el.style.right = "0px";});
+  }
+}
+
+function intersectionCheck(currentTop, currentLeft, collection, topBound, leftBound, post) {
+  //console.log("entering intersectionCheck, collection", collection);
+  for (let el of collection) {
+    //console.log("comparing", post, el, currentTop, currentLeft, topBound, leftBound);
+    if (currentTop < el.getBoundingClientRect().bottom + window.scrollY && currentLeft < el.getBoundingClientRect().right ||
+        currentTop < topBound || currentLeft < leftBound) return true;
+  }
+  return false;
 }
 
 function tessellateThread(e) {
@@ -106,6 +168,7 @@ function addTessellationQuotes() {
       let tesSpan = document.createElement("span");
       tesSpan.innerText = "[Tessellate]";
       tesSpan.classList.add("tessellateQuotes");
+      tesSpan.classList.add("collapsible");
       tesSpan.style.paddingLeft = "6px";
       tesSpan.style.paddingRight = "1px";
       tesSpan.style.fontSize = "11px";
@@ -147,6 +210,7 @@ function addCollapseAndExpand() {
     if (Array.from(postNode.children[1].children).filter(node => node.classList.contains("expandSpan")).length === 0) {
       let expandSpan = document.createElement("span");
       expandSpan.classList.add("expandSpan");
+      expandSpan.classList.add("collapsible");
       expandSpan.innerText = "[↓]";
       expandSpan.title = "expand all 'quoted by' posts";
       expandSpan.style.color = "#1019d2e6";
@@ -156,6 +220,7 @@ function addCollapseAndExpand() {
       expandSpan.style.whiteSpace = "nowrap";
       let collapseSpan = document.createElement("span");
       collapseSpan.classList.add("collapseSpan");
+      collapseSpan.classList.add("collapsible");
       collapseSpan.style.color = "#1019d2e6";
       collapseSpan.innerText = "[↑]";
       collapseSpan.title = "collapse all 'quoted by' posts";
@@ -191,6 +256,7 @@ function addMediaZoom() {
     if (Array.from(el.children).filter(el => el.classList.contains("mediaSizeChange")).length === 0) {
       let span = document.createElement("span");
       span.classList.add("mediaSizeChange");
+      span.classList.add("collapsible");
       let spanBigger = document.createElement("span");
       let spanSmaller = document.createElement("span");
       let spanReset = document.createElement("span");
@@ -365,6 +431,31 @@ function colorPostsThreadOff(e) {
   });
 }
 
+function addCollapseExtraNodesToggle() {
+  let btn = document.querySelector(".op").querySelector(".postMenuBtn");
+  let span = document.createElement("span");
+  span.classList.add("collapseExtraNodes");
+  span.title = "Collapse all extra nodes in thread";
+  span.innerText = "[Collapse extras]";
+  btn.parentNode.insertBefore(span, btn);
+  span.style.paddingLeft = "6px";
+  span.style.paddingRight = "1px";
+  span.style.fontSize = "11px";
+  span.style.color = "rgb(46, 53, 144)";
+  span.style.opacity = "1";
+  span.addEventListener("click", collapseNodesToggle);
+}
+
+function collapseNodesToggle(e) {
+  if (e.target.style.opacity === "1") {
+    Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "none");
+    e.target.style.opacity = "0.55";
+  } else {
+    Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "unset");
+    e.target.style.opacity = "1";
+  }
+}
+
 function addColorPosts() {
   Array.from(document.querySelectorAll(".postInfo.desktop")).forEach((el, i) => {
     if (i === 0) return;
@@ -372,6 +463,7 @@ function addColorPosts() {
       el.parentNode.dataset.originalColor = window.getComputedStyle(el).backgroundColor;
       let span = document.createElement("span");
       span.classList.add("colorChange");
+      span.classList.add("collapsible");
       span.title = "Color all inlined posts within this one";
       let colorOn = document.createElement("span");
       let colorOff = document.createElement("span");
@@ -408,6 +500,105 @@ function colorPostsPostOff(e) {
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
     el.style.backgroundColor = `rgb(${postColor.r}, ${postColor.g}, ${postColor.b})`;
   });
+}
+
+function addPostsDraggableToggleThread() {
+  let btn = document.querySelector(".op").querySelector(".postMenuBtn");
+  let metaSpan = document.createElement("span");
+  metaSpan.classList.add("postsDraggableContainer");
+  let spanDrag = document.createElement("span");
+  let spanDragReset = document.createElement("span");
+  spanDragReset.classList.add("postsDraggableReset");
+  spanDrag.classList.add("postsDraggableToggle");
+  spanDrag.title = "Toggle for whether posts are draggable/movable";
+  spanDrag.innerText = "Posts Draggable";
+  spanDragReset.title = "Reset positions of all posts";
+  spanDragReset.innerText = "Reset";
+  metaSpan.innerHTML = `[${spanDrag.outerHTML} | ${spanDragReset.outerHTML}]`;
+  btn.parentNode.insertBefore(metaSpan, btn);
+  metaSpan.style.paddingLeft = "6px";
+  metaSpan.style.paddingRight = "1px";
+  metaSpan.style.fontSize = "11px";
+  metaSpan.style.color = "rgb(46, 53, 144)";
+  spanDrag = document.querySelector(".postsDraggableToggle");
+  spanDrag.style.opacity = "1";
+  spanDragReset = document.querySelector(".postsDraggableReset");
+  spanDrag.addEventListener("click", postsDraggableToggle);
+  spanDragReset.addEventListener("click", postsDraggableReset);
+}
+
+function postsDraggableReset() {
+  let posts = Array.from(document.querySelectorAll(".post.reply"));
+  posts.forEach(post => {
+    //post.style.position = "unset";
+    post.style.top = "";
+    post.style.bottom = "";
+    post.style.left = "";
+    post.style.right = "";
+  });
+}
+
+let currentStartDragHorizontal = null;
+let currentStartDragVertical = null;
+let currentStartDragHorizontalDiff = null;
+let currentStartDragVerticalDiff = null;
+let currentStartDragNode = null;
+let currentDragZIndex = 1;
+
+function postsDraggableToggle(e) {
+  if (e.target.style.opacity === "1") {
+    e.target.style.opacity = "0.55";
+    document.addEventListener("dragover", documentDragOver, true);
+    document.addEventListener("drop", documentDrop, true);
+    let posts = Array.from(document.querySelectorAll(".post.reply"));
+    posts.forEach(post => {
+      //post.style.position = "absolute";
+      post.draggable = true;
+      post.addEventListener("dragstart", postDragStart, true);
+    });
+  } else {
+    e.target.style.opacity = "1";
+    document.removeEventListener("dragover", documentDragOver);
+    document.removeEventListener("drop", documentDrop);
+    let posts = Array.from(document.querySelectorAll(".post.reply"));
+    posts.forEach(post => {
+      //post.style.position = "relative";
+      post.draggable = false;
+      post.removeEventListener("dragstart", postDragStart);
+    });
+  }
+}
+
+function postDragStart(e) {
+  e.dataTransfer.setData("text", e.target);
+  //currentStartDragHorizontalDiff = Math.floor(e.clientX - e.target.getBoundingClientRect().left);
+  //currentStartDragVerticalDiff = Math.floor(e.clientY - e.target.getBoundingClientRect().top);
+  currentStartDragHorizontal = e.clientX;
+  currentStartDragVertical = e.clientY + window.scrollY;
+  currentStartDragNode = e.target;
+  //e.target.style.position = "absolute";
+  if (e.target.style.top === "") e.target.style.top = "0px";
+  if (e.target.style.left === "") e.target.style.left = "0px";
+  e.target.style.zIndex = JSON.stringify(currentDragZIndex);
+  currentDragZIndex++;
+}
+
+function documentDragOver(e) {
+  e.preventDefault();
+}
+
+function documentDrop(e) {
+  e.preventDefault();
+  //console.log("dropping, start coordinates", currentStartDragHorizontal, currentStartDragVertical, "new coordinates", e.clientX, e.clientY);
+  currentStartDragNode.style.left = `${Number(currentStartDragNode.style.left.match(/(-?\d+)px/)[1]) + e.clientX - currentStartDragHorizontal}px`;
+  currentStartDragNode.style.top = `${Number(currentStartDragNode.style.top.match(/(-?\d+)px/)[1]) + window.scrollY + e.clientY - currentStartDragVertical}px`;
+  //currentStartDragNode.style.left = `${e.clientX - currentStartDragHorizontalDiff}px`;
+  //currentStartDragNode.style.top = `${window.scrollY + e.clientY - currentStartDragVerticalDiff}px`;
+  //currentStartDragNode.style.position = "absolute";
+  if (currentStartDragNode.style.position !== "relative") currentStartDragNode.style.position = "relative";
+  currentStartDragHorizontalDiff = null;
+  currentStartDragVerticalDiff = null;
+  currentStartDragNode = null;
 }
 
 function qEV(e, node=e.target) {
@@ -484,3 +675,10 @@ function resetQLEV() {
 
 let observer = new MutationObserver(resetQLEV);
 observer.observe(document.getElementsByClassName("thread")[0], {childList: true});
+
+let quotePreviewObserver = new MutationObserver(quotePreviewHandler);
+quotePreviewObserver.observe(document.querySelector("body"), {childList: true});
+
+function quotePreviewHandler(newNodes) {
+  if (newNodes[0] && newNodes[0].addedNodes.length > 0) newNodes[0].addedNodes.forEach(el => {if (el.id === "quote-preview") el.style.zIndex = currentDragZIndex++;});
+}
