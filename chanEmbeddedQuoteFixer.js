@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         4chan embedded quote fixer
+// @name         chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread, can color posts to help keep track of embedded conversations, can zoom in/out with media, can hide extra options via toggle, can also manually drag posts around via toggle in OP
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle in OP, can manually drag posts around page via toggle in OP
 // @author       DUVish
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
@@ -259,18 +259,26 @@ function addMediaZoom() {
       span.classList.add("collapsible");
       let spanBigger = document.createElement("span");
       let spanSmaller = document.createElement("span");
+      let spanBiggerMore = document.createElement("span");
+      let spanSmallerMore = document.createElement("span");
       let spanReset = document.createElement("span");
       spanBigger.classList.add("mediaSizeIncrease");
       spanSmaller.classList.add("mediaSizeDecrease");
+      spanBiggerMore.classList.add("mediaSizeIncreaseMore");
+      spanSmallerMore.classList.add("mediaSizeDecreaseMore");
       spanReset.classList.add("mediaSizeReset");
       spanBigger.innerText = "(++)";
       spanSmaller.innerText = "(--)";
+      spanBiggerMore.innerHTML = `(<span style="font-size: 16px; position: relative; top: 1px;">++</span>)`;
+      spanSmallerMore.innerHTML = `(<span style="font-size: 18px; position: relative; top: 2px;">--</span>)`;
       spanReset.innerText = "(Reset)";
-      spanBigger.style.color = "blue";
-      spanSmaller.style.color = "blue";
-      spanReset.style.color = "blue";
+      spanBigger.style.color = "#1019d2e6";
+      spanBiggerMore.style.color = "#1019d2e6";
+      spanSmaller.style.color = "#1019d2e6";
+      spanSmallerMore.style.color = "#1019d2e6";
+      spanReset.style.color = "#1019d2e6";
       spanReset.style.fontSize = "10px";
-      span.innerHTML = `[ ${spanSmaller.outerHTML} Size ${spanBigger.outerHTML} - ${spanReset.outerHTML} ]`;
+      span.innerHTML = `[ Size - ${spanSmaller.outerHTML} ${spanSmallerMore.outerHTML} | ${spanBigger.outerHTML} ${spanBiggerMore.outerHTML} | ${spanReset.outerHTML} ]`;
       el.appendChild(span);
       span.style.fontSize = "12px";
       span.style.position = "relative";
@@ -284,39 +292,48 @@ function addMediaZoom() {
     spanBigger.removeEventListener("click", mediaSizeIncrease);
     let spanSmaller = el.getElementsByClassName("mediaSizeDecrease")[0];
     spanSmaller.removeEventListener("click", mediaSizeDecrease);
+    let spanBiggerMore = el.getElementsByClassName("mediaSizeIncreaseMore")[0];
+    spanBiggerMore.removeEventListener("click", mediaSizeIncreaseMore);
+    let spanSmallerMore = el.getElementsByClassName("mediaSizeDecreaseMore")[0];
+    spanSmallerMore.removeEventListener("click", mediaSizeDecreaseMore);
     let spanReset = el.getElementsByClassName("mediaSizeReset")[0];
     spanReset.removeEventListener("click", mediaSizeReset);
     spanBigger.addEventListener("click", mediaSizeIncrease);
     spanSmaller.addEventListener("click", mediaSizeDecrease);
+    spanBiggerMore.addEventListener("click", mediaSizeIncreaseMore);
+    spanSmallerMore.addEventListener("click", mediaSizeDecreaseMore);
     spanReset.addEventListener("click", mediaSizeReset);
   });
 }
 
 function mediaSizeIncrease(e) {
   let min = 0;
-  let max = Number(e.target.parentNode.parentNode.innerText.match(/\d+x\d+/)[0].split("x")[0]);
+  let max = Number(e.target.parentNode.parentNode.parentNode.innerText.match(/\d+x\d+/)[0].split("x")[0]);
   let fileDiv = e.target.parentNode.parentNode.parentNode;
   if (Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO").length !== 0) {
     let vidEl = Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO")[0];
-    let currentWidth = Number(vidEl.style.maxWidth.match(/\d+/));
-    currentWidth += 20;
-    if (currentWidth > max) {
-      vidEl.style.maxWidth = `${max}px`;
-    } else {
-      vidEl.style.maxWidth = `${currentWidth}px`;
+    if (vidEl.style.maxWidth) {
+      vidEl.style.width = vidEl.style.maxWidth;
+      vidEl.style.maxWidth = "";
+      vidEl.style.maxHeight = "";
     }
+    vidEl.style.height = "";
+    let currentWidth = Number(vidEl.style.width.match(/\d+/));
+    currentWidth += 20;
+    vidEl.style.width = `${currentWidth}px`;
   } else {
     if (fileDiv.classList.contains("image-expanded")) {
       let img = Array.from(fileDiv.querySelectorAll("img")).filter(el => el.classList.contains("expanded-thumb"))[0];
       if (img) {
-        let currentWidth = Number(img.style.maxWidth.match(/\d+/));
-        currentWidth += 20;
-        if (currentWidth > max) {
-          img.style.maxWidth = `${max}px}`;
-          currentWidth = max;
-        } else {
-          img.style.maxWidth = `${currentWidth}px`;
+        if (img.style.maxWidth) {
+          img.style.width = img.style.maxWidth;
+          img.style.maxWidth = "";
+          img.style.maxHeight = "";
         }
+        img.style.height = "";
+        let currentWidth = Number(img.style.width.match(/\d+/));
+        currentWidth += 20;
+        img.style.width = `${currentWidth}px`;
       }
     }
   }
@@ -328,24 +345,111 @@ function mediaSizeDecrease(e) {
   let fileDiv = e.target.parentNode.parentNode.parentNode;
   if (Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO").length !== 0) {
     let vidEl = Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO")[0];
-    let currentWidth = Number(vidEl.style.maxWidth.match(/\d+/));
+    if (vidEl.style.maxWidth) {
+      vidEl.style.width = vidEl.style.maxWidth;
+      vidEl.style.maxWidth = "";
+      vidEl.style.maxHeight = "";
+    }
+    vidEl.style.height = "";
+    let currentWidth = Number(vidEl.style.width.match(/\d+/));
     currentWidth -= 20;
     if (currentWidth < 0) {
-      vidEl.style.maxWidth = `0px`;
+      vidEl.style.width = `0px`;
       currentWidth = 0;
     } else {
-      vidEl.style.maxWidth = `${currentWidth}px`;
+      vidEl.style.width = `${currentWidth}px`;
     }
   } else {
     if (fileDiv.classList.contains("image-expanded")) {
       let img = Array.from(fileDiv.querySelectorAll("img")).filter(el => el.classList.contains("expanded-thumb"))[0];
       if (img) {
-        let currentWidth = Number(img.style.maxWidth.match(/\d+/));
+        if (img.style.maxWidth) {
+          img.style.width = img.style.maxWidth;
+          img.style.maxWidth = "";
+          img.style.maxHeight = "";
+        }
+        img.style.height = "";
+        let currentWidth = Number(img.style.width.match(/\d+/));
         currentWidth -= 20;
         if (currentWidth < 0) {
-          img.style.maxWidth = `${max}px}`;
+          img.style.width = `${max}px}`;
         } else {
-          img.style.maxWidth = `${currentWidth}px`;
+          img.style.width = `${currentWidth}px`;
+        }
+      }
+    }
+  }
+}
+
+function mediaSizeIncreaseMore(e) {
+  let min = 0;
+  let max = Number(e.target.parentNode.parentNode.parentNode.innerText.match(/\d+x\d+/)[0].split("x")[0]);
+  let fileDiv = e.target.parentNode.parentNode.parentNode.parentNode;
+  if (Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO").length !== 0) {
+    let vidEl = Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO")[0];
+    if (vidEl.style.maxWidth) {
+      vidEl.style.width = vidEl.style.maxWidth;
+      vidEl.style.maxWidth = "";
+      vidEl.style.maxHeight = "";
+    }
+    vidEl.style.height = "";
+    let currentWidth = Number(vidEl.style.width.match(/\d+/));
+    currentWidth += 100;
+    vidEl.style.width = `${currentWidth}px`;
+  } else {
+    if (fileDiv.classList.contains("image-expanded")) {
+      let img = Array.from(fileDiv.querySelectorAll("img")).filter(el => el.classList.contains("expanded-thumb"))[0];
+      if (img) {
+        if (img.style.maxWidth) {
+          img.style.width = img.style.maxWidth;
+          img.style.maxWidth = "";
+          img.style.maxHeight = "";
+        }
+        img.style.height = "";
+        let currentWidth = Number(img.style.width.match(/\d+/));
+        currentWidth += 100;
+        img.style.width = `${currentWidth}px`;
+      }
+    }
+  }
+}
+
+function mediaSizeDecreaseMore(e) {
+  let min = 0;
+  let max = Number(e.target.parentNode.parentNode.parentNode.innerText.match(/\d+x\d+/)[0].split("x")[0]);
+  let fileDiv = e.target.parentNode.parentNode.parentNode.parentNode;
+  if (Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO").length !== 0) {
+    let vidEl = Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO")[0];
+    if (vidEl.style.maxWidth) {
+      vidEl.style.width = vidEl.style.maxWidth;
+      vidEl.style.maxWidth = "";
+      vidEl.style.maxHeight = "";
+    }
+    vidEl.style.height = "";
+    let currentWidth = Number(vidEl.style.width.match(/\d+/));
+    currentWidth -= 100;
+    if (currentWidth < 0) {
+      vidEl.style.width = `0px`;
+      currentWidth = 0;
+    } else {
+      vidEl.style.width = `${currentWidth}px`;
+    }
+  } else {
+    if (fileDiv.classList.contains("image-expanded")) {
+      let img = Array.from(fileDiv.querySelectorAll("img")).filter(el => el.classList.contains("expanded-thumb"))[0];
+      if (img) {
+        if (img.style.maxWidth) {
+          img.style.width = img.style.maxWidth;
+          img.style.maxWidth = "";
+          img.style.maxHeight = "";
+        }
+        img.style.height = "";
+        let currentWidth = Number(img.style.width.match(/\d+/));
+        currentWidth -= 100;
+        if (currentWidth < 0) {
+          img.style.width = `${max}px}`;
+        } else {
+          img.style.width = `${currentWidth}px`;
         }
       }
     }
@@ -358,14 +462,14 @@ function mediaSizeReset(e) {
   let fileDiv = e.target.parentNode.parentNode.parentNode;
   if (Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO").length !== 0) {
     let vidEl = Array.from(fileDiv.children).filter(el => el.tagName === "VIDEO")[0];
-    vidEl.style.maxWidth = `${width}px`;
-    vidEl.style.maxHeight = `${height}px`;
+    vidEl.style.width = `${width}px`;
+    vidEl.style.height = `${height}px`;
   } else {
      if (fileDiv.classList.contains("image-expanded")) {
       let img = Array.from(fileDiv.querySelectorAll("img")).filter(el => el.classList.contains("expanded-thumb"))[0];
       if (img) {
-        img.style.maxWidth = `${width}px`;
-        img.style.maxHeight = `${height}px`;
+        img.style.width = `${width}px`;
+        img.style.height = `${height}px`;
       }
     }
   }
