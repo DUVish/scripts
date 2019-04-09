@@ -42,13 +42,13 @@ Array.from($(".post_data")).forEach(el => {
 
 Array.from(document.querySelectorAll(".text")).forEach(el => el.innerHTML += '<span class="inlinedQuotesContainer"></span>');
 
-$(".colorOn").on("click", function(e) {
+setTimeout(function() {document.querySelector(".colorOn").addEventListener("click", function(e) {
   Array.from(document.getElementsByClassName("post_wrapper")).forEach(el => {el.style.backgroundColor = `rgb(${Math.random() < 0.5 ? 40 - Math.floor(Math.random() * 16) : 40 + Math.floor(Math.random() * 16)}, ${Math.random() < 0.5 ? 42 - Math.floor(Math.random() * 16) : 42 + Math.floor(Math.random() * 16)}, ${Math.random() < 0.5 ? 46 - Math.floor(Math.random() * 16) : 46 + Math.floor(Math.random() * 16)})`;});
-});
+});}, 1800);
 
-$(".colorOff").on("click", function(e) {
+setTimeout(function() {document.querySelector(".colorOff").addEventListener("click", function(e) {
   Array.from(document.getElementsByClassName("post_wrapper")).forEach(el => {el.style.backgroundColor = `#282a2e`;});
-});
+});}, 1800);
 
 $(".colorPostOn").on("click", function(e) {
   Array.from(e.target.parentNode.parentNode.parentNode.parentNode.querySelectorAll(".post_wrapper")).forEach(el => {el.style.backgroundColor = `rgb(${Math.random() < 0.5 ? 40 - Math.floor(Math.random() * 16) : 40 + Math.floor(Math.random() * 16)}, ${Math.random() < 0.5 ? 42 - Math.floor(Math.random() * 16) : 42 + Math.floor(Math.random() * 16)}, ${Math.random() < 0.5 ? 46 - Math.floor(Math.random() * 16) : 46 + Math.floor(Math.random() * 16)})`;});
@@ -67,7 +67,11 @@ $(".backlink").on("click", function(e) {
 });
 
 function postRemove(e, node) {
+    let possibleThread = node.parentNode.parentNode.parentNode.parentNode.parentNode;
+    let possibleArticle = node.parentNode.parentNode.parentNode.parentNode;
     node.parentNode.parentNode.parentNode.remove();
+    possibleArticle.style.display = "none";
+    //if (possibleThread.tagName === "ASIDE");
 }
 
 function inOnClickFunc(e, node) {
@@ -84,9 +88,10 @@ $(".tessellatePost").on("click", function(e) {
     tessellatePost(e, this);
 });
 
-$(".tessellateThread").on("click", function(e) {
-    tessellateThread(e, this);
-});
+
+setTimeout(function() {document.querySelector(".tessellateThread").addEventListener("click", function(e) {
+    tessellateThread(e);
+});}, 1500);
 
 function tessellatePost(e, node) {
   let container = node.parentNode.parentNode.parentNode.parentNode.querySelector(".inlinedQuotesContainer");
@@ -104,9 +109,9 @@ function tessellatePost(e, node) {
   }
 }
 
-function tessellateThread(e, node) {
+function tessellateThread(e) {
   let container = document.querySelector(".posts");
-  let tesSpan = node;
+  let tesSpan = e.target;
   if (container.style.display !== "flex") {
     let threadImgBottomBound = document.querySelector(".thread_image_box").getBoundingClientRect().bottom;
     let dividerTopBound = document.querySelector(".thread_tools_bottom").getBoundingClientRect().top;
@@ -175,10 +180,10 @@ function backlinkReset(e, node) {
     $(".tessellatePost").on("click", function(e) {
         tessellatePost(e, this);
     });
-    //$(".postRemove").off();
-    //$(".postRemove").on("click", function(e) {
-    //    postRemove(e, node);
-    //});
+    $(".postRemove").off();
+    $(".postRemove").on("click", function(e) {
+        postRemove(e, this);
+    });
     $(".expandAllQuotes").off();
     $(".expandAllQuotes").on("click", function(e) {
       expandAllQuotes(e, this);
