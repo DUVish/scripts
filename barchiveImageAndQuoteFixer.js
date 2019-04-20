@@ -2,7 +2,7 @@
 // @name         barchive image and quote fixer
 // @namespace    thebarchive
 // @version      0.1
-// @description  replaces thumbnails with full image or webm on click, inlines "quoted by" posts on click, can also remove posts, tessellate inlined posts, tessellate entire thread, and expand/collapse all 'quoted by' posts, can color posts recursively downward or entire thread (helps keep track of deeply-embedded conversations), can hide all extra options on posts (to make them smaller/simpler) via toggle in OP, can change media size when expanded
+// @description  replaces thumbnails with full image or webm on click, inlines "quoted by" posts on click, can also remove posts, tessellate inlined posts, tessellate entire thread, and expand/collapse all 'quoted by' posts, can color posts recursively downward or entire thread (helps keep track of deeply-embedded conversations), can hide all extra options on posts (to make them smaller/simpler) via toggle in OP, can change media size when expanded, can drag posts around via toggle and reset their positions in OP
 // @author       DUVish
 // @match        https://thebarchive.com/b/thread/*
 // @match        https://archived.moe/*/thread/*
@@ -361,4 +361,62 @@ document.querySelector(".removeExtras").addEventListener("click", function(e) {
     e.target.style.opacity = "0.95";
     Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "unset");
   }
+});
+
+document.querySelector(".post_data").innerHTML += `<span class="postsDraggableContainer" style="font-size: 10px;position: relative;top: -2px;padding-left: 8px;color: #7fa5c6;opacity: 0.95;padding-right: 11px;">[<span class="postsDraggableToggle" style="opacity: 0.95;">Posts Draggable</span> | <span class="postsDraggableReset">Reset</span>]</span>`;
+
+let currentNode = null;
+let startDragX = null;
+let startDragY = null;
+let currentZIndex = 1;
+
+document.querySelector(".postsDraggableToggle").addEventListener("click", function(e) {
+  if (e.target.style.opacity === "0.95") {
+    e.target.style.opacity = "0.55";
+    Array.from(document.querySelectorAll("article.post")).forEach(el => {
+      el.draggable = true;
+      el.ondragstart = function(e) {
+        e.stopPropagation();
+        e.dataTransfer.setData("postData", e.target.innerHTML);
+        currentNode = e.target;
+        startDragX = e.clientX;
+        startDragY = window.scrollY + e.clientY;
+        e.target.style.position = "relative";
+        if (e.target.style.top === "") e.target.style.top = "0px";
+        if (e.target.style.left === "") e.target.style.left = "0px";
+      };
+    });
+    document.addEventListener("dragover", docDragOver);
+    document.addEventListener("drop", postDrop);
+  } else {
+    e.target.style.opacity = "0.95";
+    Array.from(document.querySelectorAll("article.post")).forEach(el => el.draggable = false);
+    document.removeEventListener("dragover", docDragOver);
+    document.removeEventListener("drop", postDrop);
+  }
+});
+
+function docDragOver(e) {
+  e.preventDefault();
+}
+
+function postDrop(e) {
+  let currentX = e.clientX;
+  let currentY = window.scrollY + e.clientY;
+  let newX = currentX - startDragX;
+  let newY = currentY - startDragY;
+  currentNode.style.top = `${Number(currentNode.style.top.match(/(-?\d+)px/)[1]) + newY}px`;
+  currentNode.style.left = `${Number(currentNode.style.left.match(/(-?\d+)px/)[1]) + newX}px`;
+  currentNode.style.zIndex = `${currentZIndex++}`;
+  currentNode = null;
+  startDragX = null;
+  startDragY = null;
+}
+
+document.querySelector(".postsDraggableReset").addEventListener("click", function(e) {
+  Array.from(document.querySelectorAll("article.post")).forEach(el => {
+    el.style.top = "0px";
+    el.style.left = "0px";
+    el.style.zIndex = "";
+  });
 });
