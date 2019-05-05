@@ -2,7 +2,7 @@
 // @name         chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle in OP, can manually drag posts around page via toggle in OP
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle in OP, can manually drag posts around page via toggle in OP, can remove (You)s
 // @author       DUVish
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
@@ -42,6 +42,7 @@ document.querySelector("head").innerHTML += `<style>div.post {overflow: visible}
         setPostColor();
         addCollapseExtraNodesToggle();
         addPostsDraggableToggleThread();
+        addRemoveYousInPost();
     }, 2500);
 //});
 
@@ -269,7 +270,7 @@ function addMediaZoom() {
       spanReset.classList.add("mediaSizeReset");
       spanBigger.innerText = "(++)";
       spanSmaller.innerText = "(--)";
-      spanBiggerMore.innerHTML = `(<span style="font-size: 16px; position: relative; top: 1px;">++</span>)`;
+      spanBiggerMore.innerHTML = `(<span style="font-size: 16px; position: relative; top: 1.5px;">++</span>)`;
       spanSmallerMore.innerHTML = `(<span style="font-size: 18px; position: relative; top: 2px;">--</span>)`;
       spanReset.innerText = "(Reset)";
       spanBigger.style.color = "#1019d2e6";
@@ -674,7 +675,7 @@ function postsDraggableToggle(e) {
 }
 
 function postDragStart(e) {
-  e.dataTransfer.setData("text", e.target);
+  e.dataTransfer.setData("text", e.target.outerHTML);
   //currentStartDragHorizontalDiff = Math.floor(e.clientX - e.target.getBoundingClientRect().left);
   //currentStartDragVerticalDiff = Math.floor(e.clientY - e.target.getBoundingClientRect().top);
   currentStartDragHorizontal = e.clientX;
@@ -703,6 +704,34 @@ function documentDrop(e) {
   currentStartDragHorizontalDiff = null;
   currentStartDragVerticalDiff = null;
   currentStartDragNode = null;
+}
+
+function addRemoveYousInPost() {
+  Array.from(document.querySelectorAll(".postInfo.desktop")).forEach(el => {
+    if (Array.from(el.children).filter(el => el.classList.contains("removeYouPost")).length === 0) {
+      let btn = el.querySelector(".postMenuBtn");
+      let newSpan = document.createElement("span");
+      newSpan.innerText = "[Remove (You)s]";
+      newSpan.style.paddingLeft = "6px";
+      newSpan.style.paddingRight = "1px";
+      newSpan.style.fontSize = "11px";
+      newSpan.style.color = "rgb(46, 53, 144)";
+      newSpan.classList.add("removeYouPost");
+      newSpan.title = "Remove all (You)s from current post (works recursively downward)";
+      btn.parentNode.insertBefore(newSpan, btn);
+    }
+  });
+  Array.from(document.querySelectorAll(".removeYouPost")).forEach(el => {
+    el.removeEventListener("click", removeYouPost);
+    el.addEventListener("click", removeYouPost);
+  });
+}
+
+function removeYouPost(e) {
+  let post = e.target.parentNode.parentNode;
+  Array.from(post.querySelectorAll("a.quotelink")).forEach(el => {
+    el.innerText = el.innerText.replace(" (You)", "");
+  });
 }
 
 function qEV(e, node=e.target) {
@@ -775,6 +804,7 @@ function resetQLEV() {
   addMediaZoom();
   addColorPosts();
   setPostColor();
+  addRemoveYousInPost();
 }
 
 let observer = new MutationObserver(resetQLEV);
