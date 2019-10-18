@@ -351,17 +351,33 @@ function settingClickHandler(e, node) {
 
 Array.from(document.querySelectorAll(".backlink.op")).forEach(el => el.innerText += "  (OP)");
 
-document.querySelector(".post_data").innerHTML += '<span class="removeExtras" style="font-size: 10px;position: relative;top: -2px;padding-left: 8px;color: #7fa5c6;opacity: 0.95;padding-right: 11px;" title="Remove extra options from all posts">[Remove Extras]</span>';
+function addRemoveExtras() {
+  let removeExtrasSpan = document.createElement("span");
+  removeExtrasSpan.innerText = "[Remove Extras]";
+  removeExtrasSpan.title = "Remove extra options from all posts";
+  removeExtrasSpan.classList.add("removeExtras");
+  removeExtrasSpan.style.fontSize = "10px";
+  removeExtrasSpan.style.position = "relative";
+  removeExtrasSpan.style.top = "-2px";
+  removeExtrasSpan.style.paddingLeft = "11px";
+  removeExtrasSpan.style.paddingRight = "6px";
+  removeExtrasSpan.style.opacity = "0.95";
+  removeExtrasSpan.style.color = "#7fa5c6";
 
-document.querySelector(".removeExtras").addEventListener("click", function(e) {
-  if (e.target.style.opacity === "0.95") {
-    e.target.style.opacity = "0.55";
-    Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "none");
-  } else {
-    e.target.style.opacity = "0.95";
-    Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "unset");
-  }
-});
+  document.querySelector(".post_data").appendChild(removeExtrasSpan);
+
+  setTimeout(function() {document.querySelector(".removeExtras").addEventListener("click", function(e) {
+    if (e.target.style.opacity === "0.95") {
+      e.target.style.opacity = "0.55";
+      Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "none");
+    } else {
+      e.target.style.opacity = "0.95";
+      Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "unset");
+    }
+  }, false)}, 1800);
+}
+
+addRemoveExtras();
 
 document.querySelector(".post_data").innerHTML += `<span class="postsDraggableContainer" style="font-size: 10px;position: relative;top: -2px;padding-left: 8px;color: #7fa5c6;opacity: 0.95;padding-right: 11px;">[<span class="postsDraggableToggle" style="opacity: 0.95;">Posts Draggable</span> | <span class="postsDraggableReset">Reset</span>]</span>`;
 
@@ -419,4 +435,10 @@ document.querySelector(".postsDraggableReset").addEventListener("click", functio
     el.style.left = "0px";
     el.style.zIndex = "";
   });
+});
+
+document.querySelector(".thread_tools_bottom").style.paddingBottom = "150px";
+
+Array.from(document.querySelectorAll("iframe")).forEach(el => {
+  if (el.src.match(/syndication\.exosrv/gi)) el.remove();
 });
