@@ -6,6 +6,7 @@
 // @author       DUVish
 // @match        https://thebarchive.com/b/thread/*
 // @match        https://archived.moe/*/thread/*
+// @require      https://code.jquery.com/jquery-3.4.1.slim.min.js
 // @grant        none
 // ==/UserScript==
 
@@ -192,6 +193,8 @@ function backlinkReset(e, node) {
     $(".collapseAllQuotes").on("click", function(e) {
       collapseAllQuotes(e, this);
     });
+    hoverPostDisplayOff();
+    hoverPostDisplay();
 }
 
 $(".post_image").on("click", function(e) {
@@ -318,27 +321,23 @@ function settingClickHandler(e, node) {
             });
             fileRow.querySelector(".mediaIncreaseSize").addEventListener("click", function(e) {
               let numWidth = Number(node.style.width.match(/(\d+)px/)[1]);
-              let numHeight = Number(node.style.height.match(/(\d+)px/)[1]);
               node.style.width = `${numWidth + 10}px`;
-              node.style.height = `${numHeight + 10}px`;
+              node.style.height = `auto`;
             });
             fileRow.querySelector(".mediaDecreaseSize").addEventListener("click", function(e) {
               let numWidth = Number(node.style.width.match(/(\d+)px/)[1]);
               node.style.width = numWidth > 10 ? `${numWidth - 10}px` : "0px";
-              let numHeight = Number(node.style.height.match(/(\d+)px/)[1]);
-              node.style.height = numHeight > 10 ? `${numHeight - 10}px` : "0px";
+              node.style.height = `auto`;
             });
             fileRow.querySelector(".mediaIncreaseSizeMore").addEventListener("click", function(e) {
               let numWidth = Number(node.style.width.match(/(\d+)px/)[1]);
-              let numHeight = Number(node.style.height.match(/(\d+)px/)[1]);
               node.style.width = `${numWidth + 100}px`;
-              node.style.height = `${numHeight + 100}px`;
+              node.style.height = `auto`;
             });
             fileRow.querySelector(".mediaDecreaseSizeMore").addEventListener("click", function(e) {
               let numWidth = Number(node.style.width.match(/(\d+)px/)[1]);
               node.style.width = numWidth > 100 ? `${numWidth - 100}px` : "0px";
-              let numHeight = Number(node.style.height.match(/(\d+)px/)[1]);
-              node.style.height = numHeight > 100 ? `${numHeight - 100}px` : "0px";
+              node.style.height = `auto`;
             });
         } else {
             node.src = node.dataset.originalSrc;
@@ -442,3 +441,54 @@ document.querySelector(".thread_tools_bottom").style.paddingBottom = "150px";
 Array.from(document.querySelectorAll("iframe")).forEach(el => {
   if (el.src.match(/syndication\.exosrv/gi)) el.remove();
 });
+
+setInterval(resetAdTimers, 15000);
+
+function resetAdTimers() {
+  localStorage.setItem("wrYSnOgILastPopAt", JSON.stringify(new Date().getTime()));
+  localStorage.setItem("exoJsPop101Last", JSON.stringify(new Date().getTime()));
+  localStorage.setItem("giqyxlnrLastPopAt", JSON.stringify(new Date().getTime()));
+  localStorage.setItem("exoJsPop101LastPopAt", JSON.stringify(new Date().getTime()));
+}
+
+function hoverPostDisplay() {
+  Array.from(document.querySelectorAll(".backlink")).forEach(link => {
+    link.addEventListener("mouseenter", backlinkEnter);
+  });
+
+  Array.from(document.querySelectorAll(".backlink")).forEach(link => {
+    link.addEventListener("mouseleave", backlinkLeave);
+  });
+}
+
+function backlinkEnter(e) {
+    const postNumber = e.target.innerText.replace(/>/g, "");
+    let post = Array.from(document.querySelectorAll("article")).filter(el => {
+      return el.id === postNumber;
+    })[0].outerHTML;
+    let hoverPostContainer = document.createElement("div");
+    hoverPostContainer.classList.add("hoverPostContainer");
+    hoverPostContainer.style.position = "absolute";
+    hoverPostContainer.style.zIndex = "10000000";
+    document.querySelector("body").appendChild(hoverPostContainer);
+    document.querySelector(".hoverPostContainer").innerHTML += post;
+    let positionArr = [e.target.getBoundingClientRect().top + window.pageYOffset, e.target.getBoundingClientRect().left + window.pageXOffset];
+    hoverPostContainer.style.top = `${positionArr[0] + 20}px`;
+    hoverPostContainer.style.left = `${positionArr[1]}px`;
+}
+
+function backlinkLeave(e) {
+  document.querySelector(".hoverPostContainer").remove();
+}
+
+function hoverPostDisplayOff() {
+  Array.from(document.querySelectorAll(".backlink")).forEach(link => {
+    link.removeEventListener("mouseenter", backlinkEnter);
+  });
+
+  Array.from(document.querySelectorAll(".backlink")).forEach(link => {
+    link.removeEventListener("mouseleave", backlinkLeave);
+  });
+}
+
+setTimeout(hoverPostDisplay, 1000);
