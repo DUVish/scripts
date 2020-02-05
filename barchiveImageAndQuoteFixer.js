@@ -43,8 +43,10 @@ Array.from($(".post_data")).forEach(el => {
 
 Array.from(document.querySelectorAll(".text")).forEach(el => el.innerHTML += '<span class="inlinedQuotesContainer"></span>');
 
+const colorDiff = 42;
+
 setTimeout(function() {document.querySelector(".colorOn").addEventListener("click", function(e) {
-  Array.from(document.getElementsByClassName("post_wrapper")).forEach(el => {el.style.backgroundColor = `rgb(${Math.random() < 0.5 ? 40 - Math.floor(Math.random() * 16) : 40 + Math.floor(Math.random() * 16)}, ${Math.random() < 0.5 ? 42 - Math.floor(Math.random() * 16) : 42 + Math.floor(Math.random() * 16)}, ${Math.random() < 0.5 ? 46 - Math.floor(Math.random() * 16) : 46 + Math.floor(Math.random() * 16)})`;});
+  Array.from(document.getElementsByClassName("post_wrapper")).forEach(el => {el.style.backgroundColor = `rgb(${Math.random() < 0.5 ? 40 - Math.floor(Math.random() * colorDiff) : 40 + Math.floor(Math.random() * colorDiff)}, ${Math.random() < 0.5 ? 42 - Math.floor(Math.random() * colorDiff) : 42 + Math.floor(Math.random() * colorDiff)}, ${Math.random() < 0.5 ? 46 - Math.floor(Math.random() * colorDiff) : 46 + Math.floor(Math.random() * colorDiff)})`;});
 });}, 1800);
 
 setTimeout(function() {document.querySelector(".colorOff").addEventListener("click", function(e) {
@@ -52,7 +54,7 @@ setTimeout(function() {document.querySelector(".colorOff").addEventListener("cli
 });}, 1800);
 
 $(".colorPostOn").on("click", function(e) {
-  Array.from(e.target.parentNode.parentNode.parentNode.parentNode.querySelectorAll(".post_wrapper")).forEach(el => {el.style.backgroundColor = `rgb(${Math.random() < 0.5 ? 40 - Math.floor(Math.random() * 16) : 40 + Math.floor(Math.random() * 16)}, ${Math.random() < 0.5 ? 42 - Math.floor(Math.random() * 16) : 42 + Math.floor(Math.random() * 16)}, ${Math.random() < 0.5 ? 46 - Math.floor(Math.random() * 16) : 46 + Math.floor(Math.random() * 16)})`;});
+  Array.from(e.target.parentNode.parentNode.parentNode.parentNode.querySelectorAll(".post_wrapper")).forEach(el => {el.style.backgroundColor = `rgb(${Math.random() < 0.5 ? 40 - Math.floor(Math.random() * colorDiff) : 40 + Math.floor(Math.random() * colorDiff)}, ${Math.random() < 0.5 ? 42 - Math.floor(Math.random() * colorDiff) : 42 + Math.floor(Math.random() * colorDiff)}, ${Math.random() < 0.5 ? 46 - Math.floor(Math.random() * colorDiff) : 46 + Math.floor(Math.random() * colorDiff)})`;});
 });
 
 $(".colorPostOff").on("click", function(e) {
@@ -85,9 +87,9 @@ document.querySelector("head").innerHTML += '<style>.clicked {opacity: 0.3;}</st
 
 document.querySelector("title").innerText = "/b/ - " + document.querySelector(".text").innerText;
 
-$(".tessellatePost").on("click", function(e) {
+setTimeout(() => {$(".tessellatePost").on("click", function(e) {
     tessellatePost(e, this);
-});
+})}, 1500);
 
 
 setTimeout(function() {document.querySelector(".tessellateThread").addEventListener("click", function(e) {
