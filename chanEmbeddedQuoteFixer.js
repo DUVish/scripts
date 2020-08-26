@@ -696,8 +696,6 @@ function documentDragOver(e) {
 
 function documentDrop(e) {
   e.preventDefault();
-  //console.log("dropping, start coordinates", currentStartDragHorizontal, currentStartDragVertical, "new coordinates", e.clientX, e.clientY);
-    console.log("droppping", "currentStartDragNode.style.top=" + currentStartDragNode.style.top, "currentStartDragNode.style.top.match(/(-?\d+)px/)[1]=" + currentStartDragNode.style.top.match(/(-?\d+)px/)[1], "window.scrollY=" + window.scrollY, "e.clientY=" + e.clientY, "currentStartDragVertical=" + currentStartDragVertical);
   currentStartDragNode.style.left = `${Number(currentStartDragNode.style.left.match(/([-\.\d]+)px/)[1]) + e.clientX - currentStartDragHorizontal}px`;
   currentStartDragNode.style.top = `${Number(currentStartDragNode.style.top.match(/([-\.\d]+)px/)[1]) + window.scrollY + e.clientY - currentStartDragVertical}px`;
   //currentStartDragNode.style.left = `${e.clientX - currentStartDragHorizontalDiff}px`;
