@@ -50,8 +50,10 @@ document.querySelector("head").innerHTML += `<style>div.post {overflow: visible}
   //repeat for all posts - tesselation would not just add display: flex and flex-wrap:wrap to thread container, but also margin/-margin to each individual post - can either add some caching capability by storing data on
   //dome nodes themselves, or just store all of the HTML before, revert on option, and re-compute each time, possibly also add to barchive, also add for within posts themselves
 
-var postColor = "";
-const colorDiff = 18;
+var postColor = '';
+var colorDiff = 44;
+
+if (window.location.href.includes("boards.4chan.org")) colorDiff = 25;
 
 function addTessellationThread() {
   let newSpan = document.createElement("span");
@@ -524,9 +526,9 @@ function addColorPostsThread() {
 
 function colorPostsThreadOn(e) {
   Array.from(document.querySelectorAll(".post.reply")).forEach(el => {
-    el.style.backgroundColor = `rgb(${Math.random() > 0.5 ? postColor.r - (Math.random() * colorDiff) : postColor.r + (Math.random() * colorDiff)},
-    ${Math.random() > 0.5 ? postColor.g - (Math.random() * colorDiff) : postColor.g + (Math.random() * colorDiff)},
-    ${Math.random() > 0.5 ? postColor.b - (Math.random() * colorDiff) : postColor.b + (Math.random() * colorDiff)})`;
+    el.style.backgroundColor = `rgb(${Math.random() > 0.8 ? postColor.r - (Math.random() * (colorDiff / 5)) : postColor.r + (Math.random() * (colorDiff * 1.45))},
+    ${Math.random() > 0.8 ? postColor.g - (Math.random() * (colorDiff / 5)) : postColor.g + (Math.random() * (colorDiff * 1.45))},
+    ${Math.random() > 0.8 ? postColor.b - (Math.random() * (colorDiff / 5)) : postColor.b + (Math.random() * (colorDiff * 1.45))})`;
   });
 }
 
@@ -595,9 +597,9 @@ function addColorPosts() {
 function colorPostsPostOn(e) {
   //console.log("colorPostsPoston", e.target);
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
-    el.style.backgroundColor = `rgb(${Math.random() > 0.5 ? postColor.r - (Math.random() * colorDiff) : postColor.r + (Math.random() * colorDiff)},
-    ${Math.random() > 0.5 ? postColor.g - (Math.random() * colorDiff) : postColor.g + (Math.random() * colorDiff)},
-    ${Math.random() > 0.5 ? postColor.b - (Math.random() * colorDiff) : postColor.b + (Math.random() * colorDiff)})`;
+    el.style.backgroundColor = `rgb(${Math.random() > 0.8 ? postColor.r - (Math.random() * (colorDiff / 1.1)) : postColor.r + (Math.random() * (colorDiff * 1.25))},
+    ${Math.random() > 0.8 ? postColor.g - (Math.random() * (colorDiff / 1.25)) : postColor.g + (Math.random() * (colorDiff * 0.95))},
+    ${Math.random() > 0.8 ? postColor.b - (Math.random() * (colorDiff / 1.15)) : postColor.b + (Math.random() * (colorDiff * 1.30))})`;
   });
 }
 
@@ -695,8 +697,9 @@ function documentDragOver(e) {
 function documentDrop(e) {
   e.preventDefault();
   //console.log("dropping, start coordinates", currentStartDragHorizontal, currentStartDragVertical, "new coordinates", e.clientX, e.clientY);
-  currentStartDragNode.style.left = `${Number(currentStartDragNode.style.left.match(/(-?\d+)px/)[1]) + e.clientX - currentStartDragHorizontal}px`;
-  currentStartDragNode.style.top = `${Number(currentStartDragNode.style.top.match(/(-?\d+)px/)[1]) + window.scrollY + e.clientY - currentStartDragVertical}px`;
+    console.log("droppping", "currentStartDragNode.style.top=" + currentStartDragNode.style.top, "currentStartDragNode.style.top.match(/(-?\d+)px/)[1]=" + currentStartDragNode.style.top.match(/(-?\d+)px/)[1], "window.scrollY=" + window.scrollY, "e.clientY=" + e.clientY, "currentStartDragVertical=" + currentStartDragVertical);
+  currentStartDragNode.style.left = `${Number(currentStartDragNode.style.left.match(/([-\.\d]+)px/)[1]) + e.clientX - currentStartDragHorizontal}px`;
+  currentStartDragNode.style.top = `${Number(currentStartDragNode.style.top.match(/([-\.\d]+)px/)[1]) + window.scrollY + e.clientY - currentStartDragVertical}px`;
   //currentStartDragNode.style.left = `${e.clientX - currentStartDragHorizontalDiff}px`;
   //currentStartDragNode.style.top = `${window.scrollY + e.clientY - currentStartDragVerticalDiff}px`;
   //currentStartDragNode.style.position = "absolute";
@@ -717,6 +720,7 @@ function addRemoveYousInPost() {
       newSpan.style.fontSize = "11px";
       newSpan.style.color = "rgb(46, 53, 144)";
       newSpan.classList.add("removeYouPost");
+      newSpan.classList.add("collapsible");
       newSpan.title = "Remove all (You)s from current post (works recursively downward)";
       btn.parentNode.insertBefore(newSpan, btn);
     }
@@ -751,7 +755,8 @@ function qEV(e, node=e.target) {
     newPost.children[1].classList.remove("highlight");
     newPost.style.display = "";
     newPost.style.marginTop = "10px";
-    newPost.children[1].style.border = "1px solid #a1b7c899";
+    newPost.children[1].style.border = "1px solid rgba(172, 127, 127, 0.6)";
+    newPost.children[1].style.borderRadius = "2px";
     newPost.children[0].style.display = "none";
 
     //adding to parent post
