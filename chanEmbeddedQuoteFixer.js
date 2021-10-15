@@ -2,7 +2,7 @@
 // @name         chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle in OP, can manually drag posts around page via toggle in OP, can remove (You)s
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle in OP, can manually drag posts around page via toggle in OP, can remove (You)s, editability
 // @author       DUVish
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
@@ -43,6 +43,7 @@ document.querySelector("head").innerHTML += `<style>div.post {overflow: visible}
         addCollapseExtraNodesToggle();
         addPostsDraggableToggleThread();
         addRemoveYousInPost();
+        addEditabilityToPost();
     }, 2500);
 //});
 
@@ -597,9 +598,12 @@ function addColorPosts() {
 function colorPostsPostOn(e) {
   //console.log("colorPostsPoston", e.target);
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
-    el.style.backgroundColor = `rgb(${Math.random() > 0.8 ? postColor.r - (Math.random() * (colorDiff / 1.1)) : postColor.r + (Math.random() * (colorDiff * 1.25))},
-    ${Math.random() > 0.8 ? postColor.g - (Math.random() * (colorDiff / 1.25)) : postColor.g + (Math.random() * (colorDiff * 0.95))},
-    ${Math.random() > 0.8 ? postColor.b - (Math.random() * (colorDiff / 1.15)) : postColor.b + (Math.random() * (colorDiff * 1.30))})`;
+    let nums = getOneToThreeHigherNums();
+    let mappedNums = nums.map(num => num > 0.5 ? postColor.r + (Math.random() * colorDiff) : postColor.r - (Math.random() * colorDiff));
+    el.style.backgroundColor = `rgb(${mappedNums[0]}, ${mappedNums[1]}, ${mappedNums[2]})`;
+    //el.style.backgroundColor = `rgb(${nums[0] > 0.5 ? postColor.r - (Math.random() * (colorDiff)) : postColor.r + (Math.random() * (colorDiff))},
+    //${Math.random() > 0.8 ? postColor.g - (Math.random() * (colorDiff / 1.25)) : postColor.g + (Math.random() * (colorDiff * 0.95))},
+    //${Math.random() > 0.8 ? postColor.b - (Math.random() * (colorDiff / 1.15)) : postColor.b + (Math.random() * (colorDiff * 1.30))})`;
   });
 }
 
@@ -607,6 +611,14 @@ function colorPostsPostOff(e) {
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
     el.style.backgroundColor = `rgb(${postColor.r}, ${postColor.g}, ${postColor.b})`;
   });
+}
+
+function getOneToThreeHigherNums() {
+    while(true) {
+        let arr = [Math.random(), Math.random(), Math.random()];
+        let numbersAboveHalf = arr.filter(el => el > 0.5).length;
+        if (numbersAboveHalf > 1) return arr;
+    }
 }
 
 function addPostsDraggableToggleThread() {
@@ -736,6 +748,42 @@ function removeYouPost(e) {
   });
 }
 
+function addEditabilityToPost() {
+  Array.from(document.querySelectorAll(".postInfo.desktop")).forEach(el => {
+    if (Array.from(el.children).filter(el => el.classList.contains("addEditability")).length === 0) {
+      let btn = el.querySelector(".postMenuBtn");
+      let newSpan = document.createElement("span");
+      newSpan.innerText = "[Editable]";
+      newSpan.style.paddingLeft = "6px";
+      newSpan.style.paddingRight = "1px";
+      newSpan.style.fontSize = "11px";
+      newSpan.style.color = "rgb(46, 53, 144)";
+      newSpan.classList.add("addEditability");
+      newSpan.classList.add("collapsible");
+      newSpan.title = "Make post type-editable";
+      btn.parentNode.insertBefore(newSpan, btn);
+    }
+  });
+  Array.from(document.querySelectorAll(".addEditability")).forEach(el => {
+    el.removeEventListener("click", toggleEditabilityForPost);
+    el.addEventListener("click", toggleEditabilityForPost);
+  });
+}
+
+function toggleEditabilityForPost(e) {
+  let flag = "false";
+  if ((e.target.style.opacity === "1") || !e.target.style.opacity) {
+    e.target.style.opacity = "0.55";
+    flag = "true";
+  } else {
+    e.target.style.opacity = "1";
+    flag = "false";
+  }
+    let post = e.target.parentNode.parentNode;
+    let allEmbeddedPosts = Array.from(post.querySelectorAll(".postMessage"));
+    allEmbeddedPosts.forEach(post => post.contentEditable = flag);
+}
+
 function qEV(e, node=e.target) {
   //console.log("quote clicked.");
   e.preventDefault();
@@ -808,6 +856,7 @@ function resetQLEV() {
   addColorPosts();
   setPostColor();
   addRemoveYousInPost();
+  addEditabilityToPost();
 }
 
 let observer = new MutationObserver(resetQLEV);
