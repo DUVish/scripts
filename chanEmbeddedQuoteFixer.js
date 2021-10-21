@@ -2,7 +2,7 @@
 // @name         chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, can tessellate inlined quotes in post, also works on 4channel boards, can tesselate whole thread, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle in OP, can manually drag posts around page via toggle in OP, can remove (You)s, editability
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, also works on 4channel boards, can tesselate whole thread/inlined posts, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle (posts/thread), can manually drag posts around page via toggle (posts/thread), can remove (You)s
 // @author       DUVish
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
@@ -41,9 +41,11 @@ document.querySelector("head").innerHTML += `<style>div.post {overflow: visible}
         addColorPosts();
         setPostColor();
         addCollapseExtraNodesToggle();
+        addPostDraggableTogglePost();
         addPostsDraggableToggleThread();
         addRemoveYousInPost();
         addEditabilityToPost();
+        addCollapseExtrasInPosts();
     }, 2500);
 //});
 
@@ -564,6 +566,34 @@ function collapseNodesToggle(e) {
   }
 }
 
+function addCollapseExtrasInPosts() {
+  Array.from(document.querySelectorAll(".postInfo.desktop")).forEach((el, i) => {
+    if (i === 0) return;
+    if (Array.from(el.children).filter(child => child.classList.contains("collapseExtraNodes")).length === 0) {
+      el.parentNode.dataset.originalColor = window.getComputedStyle(el).backgroundColor;
+      let span = document.createElement("span");
+      span.classList.add("collapseExtraNodes");
+      span.classList.add("collapsible");
+      span.title = "Collapse all extra nodes of inlined posts within this one, including this";
+      span.innerHTML = `[Collapse extras]`;
+      el.insertBefore(span, el.querySelector(".postMenuBtn"));
+      span.style.paddingLeft = "6px";
+      span.style.paddingRight = "1px";
+      span.style.fontSize = "11px";
+      span.style.color = "rgb(46, 53, 144)";
+    }
+    let collapseSpan = el.querySelector(".collapseExtraNodes");
+    collapseSpan.removeEventListener("click", collapsePostsPostOn);
+    collapseSpan.addEventListener("click", collapsePostsPostOn);
+  });
+}
+
+function collapsePostsPostOn(e) {
+  Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
+    Array.from(el.querySelectorAll(".collapsible")).forEach(collapsibleEl => collapsibleEl.style.display = "none");
+  });
+}
+
 function addColorPosts() {
   Array.from(document.querySelectorAll(".postInfo.desktop")).forEach((el, i) => {
     if (i === 0) return;
@@ -671,9 +701,10 @@ function postsDraggableToggle(e) {
     document.addEventListener("drop", documentDrop, true);
     let posts = Array.from(document.querySelectorAll(".post.reply"));
     posts.forEach(post => {
-      //post.style.position = "absolute";
-      post.draggable = true;
-      post.addEventListener("dragstart", postDragStart, true);
+      if (post.draggable !== true) {
+        post.draggable = true;
+        post.addEventListener("dragstart", postDragStart, true);
+      }
     });
   } else {
     e.target.style.opacity = "1";
@@ -681,9 +712,80 @@ function postsDraggableToggle(e) {
     document.removeEventListener("drop", documentDrop);
     let posts = Array.from(document.querySelectorAll(".post.reply"));
     posts.forEach(post => {
-      //post.style.position = "relative";
-      post.draggable = false;
-      post.removeEventListener("dragstart", postDragStart);
+      if (post.draggable !== false) {
+        post.draggable = false;
+        post.removeEventListener("dragstart", postDragStart);
+      }
+    });
+  }
+}
+
+function addPostDraggableTogglePost() {
+  Array.from(document.querySelectorAll(".postInfo.desktop")).forEach((el, i) => {
+    if (i === 0) return;
+    if (Array.from(el.children).filter(child => child.classList.contains("postsDraggableContainer")).length === 0) {
+      el.parentNode.dataset.originalColor = window.getComputedStyle(el).backgroundColor;
+      let metaSpan = document.createElement("span");
+      metaSpan.classList.add("postsDraggableContainer");
+      metaSpan.classList.add("collapsible");
+      let spanDrag = document.createElement("span");
+      let spanDragReset = document.createElement("span");
+      spanDragReset.classList.add("postsDraggableResetPost");
+      spanDrag.classList.add("postsDraggableTogglePost");
+      spanDrag.title = "Toggle for whether inlined posts are draggable/movable";
+      spanDrag.innerText = "Posts Draggable";
+      spanDragReset.title = "Reset positions of all inlined posts";
+      spanDragReset.innerText = "Reset";
+      metaSpan.innerHTML = `[${spanDrag.outerHTML} | ${spanDragReset.outerHTML}]`;
+      el.insertBefore(metaSpan, el.querySelector(".postMenuBtn"));
+      metaSpan.style.paddingLeft = "6px";
+      metaSpan.style.paddingRight = "1px";
+      metaSpan.style.fontSize = "11px";
+      metaSpan.style.color = "rgb(46, 53, 144)";
+    }
+    let spanDrag = el.querySelector(".postsDraggableTogglePost");
+    spanDrag.style.opacity = "1";
+    let spanDragReset = el.querySelector(".postsDraggableResetPost");
+    spanDrag.removeEventListener("click", postsDraggableTogglePost);
+    spanDragReset.removeEventListener("click", postsDraggableResetPost);
+    spanDrag.addEventListener("click", postsDraggableTogglePost);
+    spanDragReset.addEventListener("click", postsDraggableResetPost);
+  });
+}
+
+function postsDraggableResetPost(e) {
+  let posts = Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply"));
+  posts.forEach(post => {
+    //post.style.position = "unset";
+    post.style.top = "";
+    post.style.bottom = "";
+    post.style.left = "";
+    post.style.right = "";
+  });
+}
+
+function postsDraggableTogglePost(e) {
+  if (e.target.style.opacity === "1") {
+    e.target.style.opacity = "0.55";
+    document.addEventListener("dragover", documentDragOver, true);
+    document.addEventListener("drop", documentDrop, true);
+    let posts = Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply"));
+    posts.forEach(post => {
+      if (post.draggable !== true) {
+        post.draggable = true;
+        post.addEventListener("dragstart", postDragStart, true);
+      }
+    });
+  } else {
+    e.target.style.opacity = "1";
+    document.removeEventListener("dragover", documentDragOver);
+    document.removeEventListener("drop", documentDrop);
+    let posts = Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply"));
+    posts.forEach(post => {
+      if (post.draggable !== false) {
+        post.draggable = false;
+        post.removeEventListener("dragstart", postDragStart);
+      }
     });
   }
 }
@@ -855,8 +957,10 @@ function resetQLEV() {
   addMediaZoom();
   addColorPosts();
   setPostColor();
+  addPostDraggableTogglePost();
   addRemoveYousInPost();
   addEditabilityToPost();
+  addCollapseExtrasInPosts();
 }
 
 let observer = new MutationObserver(resetQLEV);
