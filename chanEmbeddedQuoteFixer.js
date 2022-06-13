@@ -46,17 +46,27 @@ document.querySelector("head").innerHTML += `<style>div.post {overflow: visible}
         addRemoveYousInPost();
         addEditabilityToPost();
         addCollapseExtrasInPosts();
+        addExpandExtrasInPosts();
+        expandPostsPostOn();
     }, 2500);
 //});
+
+let greenTextStyler = `<style>
+  blockquote > div > span.quote {
+    color: #789922;
+  }
+</style>`;
+
+document.querySelector("head").innerHTML += greenTextStyler;
 
 //tessellation feature - move element all the way to the right, try and move up - if interfering with getBoundingClientRect in two axes, then move left, then try and move up again - repeat until both up and left are exhausted
   //repeat for all posts - tesselation would not just add display: flex and flex-wrap:wrap to thread container, but also margin/-margin to each individual post - can either add some caching capability by storing data on
   //dome nodes themselves, or just store all of the HTML before, revert on option, and re-compute each time, possibly also add to barchive, also add for within posts themselves
 
 var postColor = '';
-var colorDiff = 44;
+var colorDiff = 38;
 
-if (window.location.href.includes("boards.4chan.org")) colorDiff = 25;
+if (window.location.href.includes("boards.4chan.org")) colorDiff = 28;
 
 function addTessellationThread() {
   let newSpan = document.createElement("span");
@@ -574,7 +584,7 @@ function addCollapseExtrasInPosts() {
       let span = document.createElement("span");
       span.classList.add("collapseExtraNodes");
       span.classList.add("collapsible");
-      span.title = "Collapse all extra nodes of inlined posts within this one, including this";
+      span.title = "Collapse all extra nodes of inlined posts within this one, including this - reverse with arrow button";
       span.innerHTML = `[Collapse extras]`;
       el.insertBefore(span, el.querySelector(".postMenuBtn"));
       span.style.paddingLeft = "6px";
@@ -591,6 +601,21 @@ function addCollapseExtrasInPosts() {
 function collapsePostsPostOn(e) {
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
     Array.from(el.querySelectorAll(".collapsible")).forEach(collapsibleEl => collapsibleEl.style.display = "none");
+  });
+}
+
+function addExpandExtrasInPosts() {
+  Array.from(document.querySelectorAll(".postInfo.desktop")).forEach((el, i) => {
+    if (i === 0) return;
+    let buttonMenuSpan = el.querySelector(".postMenuBtn");
+    buttonMenuSpan.removeEventListener("click", expandPostsPostOn);
+    buttonMenuSpan.addEventListener("click", expandPostsPostOn);
+  });
+}
+
+function expandPostsPostOn(e) {
+  Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
+    Array.from(el.querySelectorAll(".collapsible")).forEach(collapsibleEl => collapsibleEl.style.display = "unset");
   });
 }
 
@@ -628,12 +653,10 @@ function addColorPosts() {
 function colorPostsPostOn(e) {
   //console.log("colorPostsPoston", e.target);
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
-    let nums = getOneToThreeHigherNums();
-    let mappedNums = nums.map(num => num > 0.5 ? postColor.r + (Math.random() * colorDiff) : postColor.r - (Math.random() * colorDiff));
+    let nums = getTwoToThreeHigherNums();
+    let randomDiff = getAtLeastOneQuarterFromRandom();
+    let mappedNums = nums.map((num, idx) => num > 0.5 ? getSpecificColorFromMappedNumIdx(idx) + (randomDiff * colorDiff) : getSpecificColorFromMappedNumIdx(idx) - (randomDiff * colorDiff));
     el.style.backgroundColor = `rgb(${mappedNums[0]}, ${mappedNums[1]}, ${mappedNums[2]})`;
-    //el.style.backgroundColor = `rgb(${nums[0] > 0.5 ? postColor.r - (Math.random() * (colorDiff)) : postColor.r + (Math.random() * (colorDiff))},
-    //${Math.random() > 0.8 ? postColor.g - (Math.random() * (colorDiff / 1.25)) : postColor.g + (Math.random() * (colorDiff * 0.95))},
-    //${Math.random() > 0.8 ? postColor.b - (Math.random() * (colorDiff / 1.15)) : postColor.b + (Math.random() * (colorDiff * 1.30))})`;
   });
 }
 
@@ -643,12 +666,32 @@ function colorPostsPostOff(e) {
   });
 }
 
-function getOneToThreeHigherNums() {
+function getTwoToThreeHigherNums() {
     while(true) {
         let arr = [Math.random(), Math.random(), Math.random()];
         let numbersAboveHalf = arr.filter(el => el > 0.5).length;
-        if (numbersAboveHalf > 1) return arr;
+        if (numbersAboveHalf > 1 && numbersAboveHalf < 4) {
+            if (numbersAboveHalf === 3) {
+                if (arr.filter(el => el > 0.85).length > 2) return arr;
+            } else return arr;
+        }
     }
+}
+
+function getAtLeastOneQuarterFromRandom() {
+  while(true) {
+    let num = Math.random();
+    if (num > 0.25) return num;
+  }
+}
+
+function getSpecificColorFromMappedNumIdx(idx) {
+   // if (idx === 0) return 215;
+   // if (idx === 1) return 215;
+   // else return 215;
+  if (idx === 0) return postColor.r;
+  if (idx === 1) return postColor.g;
+  else return postColor.b;
 }
 
 function addPostsDraggableToggleThread() {
@@ -961,6 +1004,8 @@ function resetQLEV() {
   addRemoveYousInPost();
   addEditabilityToPost();
   addCollapseExtrasInPosts();
+  addExpandExtrasInPosts();
+  expandPostsPostOn();
 }
 
 let observer = new MutationObserver(resetQLEV);
