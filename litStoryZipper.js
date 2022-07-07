@@ -2,7 +2,7 @@
 // @name         Literotica Author Story Collection Downloader
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Select stories to download from author page on Literotica - will collect all into simplified HTMLs and download as a .zip (includes support for series)
+// @description  Select stories to download from author page on Literotica - will collect all into simplified HTMLs and download as a .zip (includes support for series), can also sort stories
 // @author       DUVish
 // @match        https://www.literotica.com/stories/memberpage.php?uid=*&page=submissions
 // ==/UserScript==
@@ -30,6 +30,8 @@ fileScr.onload = function() {
 };
 document.querySelector("head").appendChild(fileScr);
 
+const selectorForPageText = ".panel.article";
+
 function scriptFunc() {
     var zip = new JSZip();
 
@@ -47,6 +49,12 @@ background-color: #56a0ff !important;
 background-color: #9bc7ff !important;
 }
 .selectAllBtn:active {
+background-color: #56a0ff !important;
+}
+.selectNotSeriesBtn:hover {
+background-color: #9bc7ff !important;
+}
+.selectNotSeriesBtn:active {
 background-color: #56a0ff !important;
 }
 .titleSort, .ratingSort, .categorySort, .dateSort {
@@ -76,17 +84,23 @@ align-self: center;
     Array.from($(".ser-ttl")).forEach(el => el.innerHTML += `<div style="min-width: 120px;position: relative;line-height: 40px;left: 10px;">Save Series: <input class="customSaveSeries" style="position: relative;top: 2px;" type="checkbox"></div>`);
 
 
-    Array.from(document.querySelectorAll("td")).filter(el => el.innerText === "STORY SUBMISSIONS")[0].parentNode.innerHTML += `<div style="display: flex;justify-content: flex-end;"><div class="customSaveBtn" style="width: 125px;position: relative;top: 0px;left: 485px;border-radius:8px;background-color: #c6dfff;text-align: center;height: 22px;padding-top: 5px;margin-right: 20px">Save Selected to Zip</div>
-    <div class="selectAllBtn" style="width: 155px;position: relative;top: 0px;right: -160px;border-radius:8px;background-color: #c6dfff;text-align: center;height: 22px;padding-top: 5px;margin-left: 10px">Select All (Series and Stories)</div></div>`;
+    Array.from(document.querySelectorAll("td")).filter(el => el.innerText === "STORY SUBMISSIONS")[0].parentNode.innerHTML += `<div style="display: flex;justify-content: flex-end;">
+    <div class="selectAllBtn" style="width: 155px;;top: 0px;right: -160px;border-radius:8px;background-color: #c6dfff;text-align: center;height: 22px;padding-top: 5px;margin-left: 10px">Select All (Series and Stories)</div>
+<div class="selectNotSeriesBtn" style="width: 195px;;bottom: 30px;right: -160px;border-radius:8px;background-color: #c6dfff;text-align: center;height: 22px;padding-top: 5px;margin-left: 10px;margin-right: 10px">Select All Chapters/Stories Individually</div>
+<div class="customSaveBtn" style="width: 125px;top: 0px;left: 485px;border-radius:8px;background-color: #c6dfff;text-align: center;height: 22px;padding-top: 5px;margin-right: 20px">Save Selected to Zip</div></div>`;
 
     document.querySelector(".selectAllBtn").addEventListener("click", function(e) {
       Array.from(document.querySelectorAll(".customSave, .customSaveSeries")).filter(el => el.parentNode.innerText.match(/Series|Story/i)).forEach(el => el.click());
     });
 
+    document.querySelector(".selectNotSeriesBtn").addEventListener("click", function(e) {
+      Array.from(document.querySelectorAll(".customSave, .customSaveSeries")).filter(el => el.parentNode.innerText.match(/Chapter|Story/i)).forEach(el => el.click());
+    });
+
     document.querySelector(".customSaveBtn").addEventListener("click", function(e) {
         Array.from(document.querySelectorAll(".customSave:checked")).forEach(el => {
             let htmlFileTitle = el.parentNode.parentNode.children[0].querySelector("a").innerText;
-            //console.log("Now adding story "+ htmlFileTitle);
+            console.log("Now adding story "+ htmlFileTitle);
             let link = el.parentNode.parentNode.children[0].querySelector("a").href;
             let htmlFileContent;
             $.ajax({
@@ -94,8 +108,8 @@ align-self: center;
                 url: link,
                 async: false,
                 success: function(data) {
-                    let firstPageText = $(data).find("p")[0].innerText.replace(/\n/g, "<br>");
-                    let pages = Number($(data).find(".b-pager-caption-t")[0].innerText.split(" ")[0]);
+                    let firstPageText = getTextFromPage(data);
+                    let pages = getNumberOfPages(data);
                     if (pages > 1) {
                         let arr = [];
                         let counter = 2;
@@ -110,8 +124,7 @@ align-self: center;
                                 url: newLink,
                                 async: false,
                                 success: function(data) {
-                                    firstPageText += "<br><br>";
-                                    firstPageText += $(data).find("p")[0].innerText.replace(/\n/g, "<br>");
+                                    firstPageText += getTextFromPage(data);
                                 }
                             });
                         });
@@ -120,15 +133,15 @@ align-self: center;
 <!DOCTYPE html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>${data.match(/<title>(.+)<\/title>/i)[1]}</title>
+<title>${getTitleFromPage(data)}</title>
 </head>
 <body>
 <div style="text-align:center;font-size: 22px;">
-${data.match(/<title>(.+)<\/title>/i)[1]}
+${getTitleFromPage(data)}
 </div>
 <br>
 <div style="text-align:center;font-size: 18px;font-style: italic">
-${data.match(/<meta name="description" content="(.+?)"\s+\/>/i)[1]}
+${getDescriptionFromPage(data)}
 </div>
 <br>
 ${firstPageText}
@@ -137,7 +150,7 @@ ${firstPageText}
                 }
             });
             zip.file(htmlFileTitle + ".html", htmlFileContent);
-            //console.log("just added one file to zip", htmlFileTitle);
+            console.log("just added one file to zip", htmlFileTitle);
         });
         Array.from(document.querySelectorAll(".customSaveSeries:checked")).forEach(el => {
           let text = el.parentNode.parentNode.children[0].innerText;
@@ -163,8 +176,9 @@ ${firstPageText}
               async: false,
               success: function(data) {
                     //console.log("host page in one part of series");
-                    let firstPageText = $(data).find("p")[0].innerText.replace(/\n/g, "<br>");
-                    let pages = Number($(data).find(".b-pager-caption-t")[0].innerText.split(" ")[0]);
+                    //console.log($(data));
+                    let firstPageText = getTextFromPage(data);
+                    let pages = getNumberOfPages(data)
                     if (pages > 1) {
                         let arr = [];
                         let counter = 2;
@@ -179,19 +193,18 @@ ${firstPageText}
                                 url: newLink,
                                 async: false,
                                 success: function(data) {
-                                    firstPageText += "<br>";
-                                    firstPageText += $(data).find("p")[0].innerText.replace(/\n/g, "<br>");
+                                    firstPageText += getTextFromPage(data);
                                 }
                             });
                         });
                     }
                   bodyStrWhole += `
 <div style="text-align:center;font-size: 22px;">
-${data.match(/<title>(.+)<\/title>/i)[1]}
+${getTitleFromPage(data)}
 </div>
 <br>
 <div style="text-align:center;font-size: 18px;font-style: italic">
-${data.match(/<meta name="description" content="(.+?)"\s+\/>/i)[1]}
+${getDescriptionFromPage(data)}
 </div>
 <br>
 ${firstPageText}
@@ -211,7 +224,7 @@ ${firstPageText}
 ${bodyStrWhole}
 </body>
           `;
-          //console.log("about to add series to zip", seriesName);
+          console.log("about to add series to zip", seriesName);
           zip.file(seriesName + ".html", htmlSeriesFile);
         });
         zip.generateAsync({type:"blob"})
@@ -250,6 +263,38 @@ ${bodyStrWhole}
     }
     collection.forEach(el => el.parentNode.appendChild(el));
   }));
+}
+
+function getTextFromPage(data) {
+  let textStr = "";
+  let container = $(data)?.find(selectorForPageText)[0]?.childNodes[0]?.childNodes[0];
+  Array.from(container.childNodes).forEach(node => node.innerText && node.innerText.trim().length ? textStr += node.outerHTML : null);
+  return textStr;
+}
+
+function getNumberOfPages(data) {
+  let parsedData = $(data).find(".l_bJ");
+  let maxPage = 1;
+  for (let key in parsedData) {
+    let parsedNumber = Number(parsedData[key]?.innerText);
+    if (!isNaN(parsedNumber) && (parsedNumber > maxPage)) {
+      maxPage = Number(parsedData[key]?.innerText);
+    }
+  }
+  return maxPage;
+}
+
+function getTitleFromPage(data) {
+  return $(data)[2]?.innerText || "Story Title";
+}
+
+function getDescriptionFromPage(data) {
+  let parsedData = $(data);
+  let metaTags = parsedData.find("meta");
+  for (let key in parsedData) {
+    if (!isNaN(Number(key)) && parsedData[key].name === "description") return parsedData[key].content;
+  }
+  return "Series Description";
 }
 
 function compareStrings(str1, str2) {
