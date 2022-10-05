@@ -2,7 +2,7 @@
 // @name         chan embedded quote fixer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, also works on 4channel boards, can tesselate whole thread/inlined posts, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle (posts/thread), can manually drag posts around page via toggle (posts/thread), can remove (You)s
+// @description  Puts embedded quotes in end of post rather than beginning, can also click on checkboxes in posts to remove them, also works on 4channel boards, can tesselate whole thread/inlined posts, can change size of expanded media, can color posts to help keep track of embedded conversations, can hide extra options on each post via toggle (posts/thread), can manually drag posts around page via toggle (posts/thread), can remove (You)s, can change text flow on expanded images
 // @author       DUVish
 // @match        http://boards.4chan.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
@@ -11,7 +11,13 @@
 // @grant        none
 // ==/UserScript==
 
-document.querySelector("head").innerHTML += `<style>div.post {overflow: visible}</style>`;
+document.querySelector("head").innerHTML += `
+  <style>
+    div.post {overflow: visible;}
+    div.image-expanded:not(.regularTextFlow) {display: unset !important;}
+    div.image-expanded.regularTextFlow {display: table !important;}
+  </style>
+`;
 
 //window.onload(function() {
     setTimeout(function() {
@@ -37,6 +43,7 @@ document.querySelector("head").innerHTML += `<style>div.post {overflow: visible}
         addTessellationThread();
         addThreadWidthToggle();
         addMediaZoom();
+        addMediaFlow();
         addColorPostsThread();
         addColorPosts();
         setPostColor();
@@ -72,6 +79,7 @@ function addTessellationThread() {
   let newSpan = document.createElement("span");
   newSpan.innerText = "[Tessellate Thread]";
   newSpan.classList.add("tessellateThread");
+  newSpan.classList.add("collapsible");
   newSpan.style.paddingLeft = "6px";
   newSpan.style.paddingRight = "1px";
   newSpan.style.fontSize = "11px";
@@ -157,6 +165,7 @@ function addThreadWidthToggle() {
   let newSpan = document.createElement("span");
   newSpan.innerText = "[Toggle Thread Width]";
   newSpan.classList.add("threadWidthToggle");
+  newSpan.classList.add("collapsible");
   newSpan.style.paddingLeft = "6px";
   newSpan.style.paddingRight = "1px";
   newSpan.style.fontSize = "11px";
@@ -491,6 +500,45 @@ function mediaSizeReset(e) {
   }
 }
 
+function addMediaFlow() {
+  Array.from(document.querySelectorAll(".fileText")).forEach(el => {
+    if (Array.from(el.children).filter(el => el.classList.contains("mediaFlowChange")).length === 0) {
+      let span = document.createElement("span");
+      span.classList.add("mediaFlowChange");
+      span.classList.add("collapsible");
+      span.innerText = "[Text flow]";
+      el.appendChild(span);
+      span.style.fontSize = "10px";
+      span.style.color = "#1019d2e6";
+      span.style.position = "relative";
+      span.style.bottom = "1px";
+      span.style.paddingRight = "4px";
+      span.style.opacity = "1";
+    }
+    let spanFlow = el.getElementsByClassName("mediaFlowChange")[0];
+    spanFlow.removeEventListener("click", mediaFlowChange);
+    spanFlow.addEventListener("click", mediaFlowChange);
+  });
+}
+
+function mediaFlowChange(e) {
+  let flowSpan = e.target;
+  let flowSpanOpacity = flowSpan.style.opacity;
+  let fileTextSpan = flowSpan.parentNode.parentNode;
+  console.log("in MediaFlowChange", flowSpan, fileTextSpan, flowSpanOpacity, typeof flowSpanOpacity, fileTextSpan.classList.contains("image-expanded"), fileTextSpan.style.display);
+  if (fileTextSpan.classList.contains("image-expanded")) {
+    if (flowSpanOpacity === "1") {
+      e.target.style.opacity = "0.55";
+      //fileTextSpan.style.display = "table";
+      fileTextSpan.classList.add("regularTextFlow");
+    } else {
+      e.target.style.opacity = "1";
+      //fileTextSpan.style.display = "unset";
+      fileTextSpan.classList.remove("regularTextFlow");
+    }
+  }
+}
+
 function addYTSizeChangeCapability() {
   //change yt size
 }
@@ -520,6 +568,7 @@ function addColorPostsThread() {
   let btn = document.querySelector(".op").querySelector(".postMenuBtn");
   let span = document.createElement("span");
   span.classList.add("colorChange");
+  span.classList.add("collapsible");
   span.title = "Color all posts in thread";
   let colorOn = document.createElement("span");
   let colorOff = document.createElement("span");
@@ -555,6 +604,7 @@ function addCollapseExtraNodesToggle() {
   let btn = document.querySelector(".op").querySelector(".postMenuBtn");
   let span = document.createElement("span");
   span.classList.add("collapseExtraNodes");
+  span.classList.add("collapsible");
   span.title = "Collapse all extra nodes in thread";
   span.innerText = "[Collapse extras]";
   btn.parentNode.insertBefore(span, btn);
@@ -566,13 +616,17 @@ function addCollapseExtraNodesToggle() {
   span.addEventListener("click", collapseNodesToggle);
 }
 
+let threadNodesCollapsed = false;
+
 function collapseNodesToggle(e) {
-  if (e.target.style.opacity === "1") {
+  if (!threadNodesCollapsed) {
     Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "none");
-    e.target.style.opacity = "0.55";
+    threadNodesCollapsed = true;
+    //e.target.style.opacity = "0.55";
   } else {
     Array.from(document.querySelectorAll(".collapsible")).forEach(el => el.style.display = "unset");
-    e.target.style.opacity = "1";
+    threadNodesCollapsed = false;
+    //e.target.style.opacity = "1";
   }
 }
 
@@ -606,7 +660,12 @@ function collapsePostsPostOn(e) {
 
 function addExpandExtrasInPosts() {
   Array.from(document.querySelectorAll(".postInfo.desktop")).forEach((el, i) => {
-    if (i === 0) return;
+    if (i === 0) {
+      let buttonMenuSpan = el.querySelector(".postMenuBtn");
+      buttonMenuSpan.removeEventListener("click", expandPostsThreadOn);
+      buttonMenuSpan.addEventListener("click", expandPostsThreadOn);
+      return;
+    };
     let buttonMenuSpan = el.querySelector(".postMenuBtn");
     buttonMenuSpan.removeEventListener("click", expandPostsPostOn);
     buttonMenuSpan.addEventListener("click", expandPostsPostOn);
@@ -615,6 +674,12 @@ function addExpandExtrasInPosts() {
 
 function expandPostsPostOn(e) {
   Array.from(e.target.parentNode.parentNode.parentNode.querySelectorAll(".post.reply")).forEach(el => {
+    Array.from(el.querySelectorAll(".collapsible")).forEach(collapsibleEl => collapsibleEl.style.display = "unset");
+  });
+}
+
+function expandPostsThreadOn(e) {
+  Array.from(document.querySelectorAll(".postInfo.desktop")).forEach(el => {
     Array.from(el.querySelectorAll(".collapsible")).forEach(collapsibleEl => collapsibleEl.style.display = "unset");
   });
 }
@@ -698,6 +763,7 @@ function addPostsDraggableToggleThread() {
   let btn = document.querySelector(".op").querySelector(".postMenuBtn");
   let metaSpan = document.createElement("span");
   metaSpan.classList.add("postsDraggableContainer");
+  metaSpan.classList.add("collapsible");
   let spanDrag = document.createElement("span");
   let spanDragReset = document.createElement("span");
   spanDragReset.classList.add("postsDraggableReset");
@@ -998,6 +1064,7 @@ function resetQLEV() {
   addTessellationQuotes();
   addQuotedPostsContainer();
   addMediaZoom();
+  addMediaFlow();
   addColorPosts();
   setPostColor();
   addPostDraggableTogglePost();
