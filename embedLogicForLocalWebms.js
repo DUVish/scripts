@@ -47,7 +47,7 @@ if (topLevelTable) {
   let videoTitleNode = document.createElement("div");
   videoTitleNode.style.width = "100%";
   videoTitleNode.style.textAlign = "center";
-  videoTitleNode.innerText = `[${currentEmbeddedRowIdx}/${totalRows - 1}]`;
+  videoTitleNode.innerHTML = `<span class="videoTitleNodeTitle">[${currentEmbeddedRowIdx}/${totalRows - 1}]</span> <span>Copy - <span class="videoTitleCopyTag">[videoTag]</span> | <span class="videoTitleCopyPath">[path]</span> | <span class="videoTitleCopyTitle">[title]</span></span>`;
   videoTitleNode.classList.add("videoTitleNode");
   videoViewNode.appendChild(videoTitleNode);
   document.querySelector("body").addEventListener("keydown", (e) => {
@@ -105,30 +105,49 @@ if (topLevelTable) {
 
   function updateTitle(idx) {
     let videoTitleNode = document.querySelector(".videoTitleNode");
+    let videoTitleNodeTitle = document.querySelector(".videoTitleNodeTitle");
     let topLevelBody = topLevelTable.querySelector("tbody");
     let fileName = topLevelBody?.children?.[currentEmbeddedRowIdx]?.children?.[0]?.innerText;
-    videoTitleNode.innerText = `[${idx || currentEmbeddedRowIdx}/${totalRows - 1}] - ${fileName || "Title"}`;
-    videoTitleNode.removeEventListener("click", copyVideoLink);
-    videoTitleNode.addEventListener("click", copyVideoLink);
+    videoTitleNodeTitle.innerText = `[${idx || currentEmbeddedRowIdx}/${totalRows - 1}] - ${fileName || "Title"}`;
+    let videoTitleCopyTag = document.querySelector(".videoTitleCopyTag");
+    let videoTitleCopyPath = document.querySelector(".videoTitleCopyPath");
+    let videoTitleCopyTitle = document.querySelector(".videoTitleCopyTitle");
+    videoTitleCopyTag?.removeEventListener("click", copyVideoTag);
+    videoTitleCopyTag?.addEventListener("click", copyVideoTag);
+    videoTitleCopyPath?.removeEventListener("click", copyVideoPath);
+    videoTitleCopyPath?.addEventListener("click", copyVideoPath);
+    videoTitleCopyTitle?.removeEventListener("click", copyVideoTitle);
+    videoTitleCopyTitle?.addEventListener("click", copyVideoTitle);
   }
 
-  function copyVideoLink() {
+  function copyVideoTag() {
     let fileName = topLevelBody?.children?.[currentEmbeddedRowIdx]?.children?.[0]?.innerText;
     let location = window.location.href;
     let link = location + fileName;
-    setClipboard(link);
+    const videoNodeStr = `<video src="${link}" width="" controls="true" loop="true" data-volume="" autoplay="true"></video>`;
+    setClipboard(videoNodeStr);
+  }
+
+  function copyVideoPath() {
+    let fileName = topLevelBody?.children?.[currentEmbeddedRowIdx]?.children?.[0]?.innerText;
+    let location = window.location.href;
+    let path = location + fileName;
+    setClipboard(path);
+  }
+
+  function copyVideoTitle() {
+    let fileName = topLevelBody?.children?.[currentEmbeddedRowIdx]?.children?.[0]?.innerText;
+    setClipboard(fileName);
   }
 
   function setClipboard(text) {
-    const videoNodeStr = `<video src="${text}" width="" controls="true" loop="true" data-volume="" autoplay="true"></video>`;
-
-    navigator.clipboard.writeText(videoNodeStr).then(
+    navigator.clipboard.writeText(text).then(
         () => {
-          console.log(`File ${videoNodeStr} successfully copied.`);
+          console.log(`File ${text} successfully copied.`);
           flashTitle("green");
         },
         () => {
-          console.log(`Error in copying ${videoNodeStr}`);
+          console.log(`Error in copying ${text}`);
           flashTitle("red");
         }
     );
