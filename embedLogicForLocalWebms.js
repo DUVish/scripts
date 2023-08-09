@@ -17,6 +17,20 @@ document.querySelector("head").innerHTML += `
   <style>
     .videoViewNode {
       background-color: black;
+      flex-direction: column;
+      align-items: center;
+    }
+    .videoTitleCopyContainer {
+      position: absolute;
+      right: 0px;
+      font-size: 18px;
+    }
+    .videoTitleNodeCount {
+      position: absolute;
+      left: 0px;
+    }
+    .videoTitleNodeTitle {
+      width: 100%;
     }
   </style>
 `
@@ -26,6 +40,7 @@ let topLevelTable = document.querySelector("table");
 let currentEmbeddedRowIdx = null;
 
 if (topLevelTable) {
+  document.title = window.location.href.split("/").slice(-3).reverse().join(" - ").slice(2).replaceAll("%20", "");
   let topLevelHead = topLevelTable.querySelector("thead");
   let topLevelHeadRow = topLevelHead.querySelector("tr");
   let newTableHeadCell = document.createElement("th");
@@ -36,18 +51,22 @@ if (topLevelTable) {
   let totalRows = topLevelBody.children.length;
 
   let videoViewNode = document.createElement("div");
-  videoViewNode.style.width = "90vw";
-  videoViewNode.style.height = "90vh";
+  videoViewNode.style.width = "100vw";
+  videoViewNode.style.height = "100vh";
   videoViewNode.style.display = "none";
-  videoViewNode.style.top = "2.5vh";
-  videoViewNode.style.left = "2.5vw";
+  videoViewNode.style.top = "0vh";
+  videoViewNode.style.left = "0vw";
   videoViewNode.style.position = "fixed";
   videoViewNode.classList.add("videoViewNode");
   document.querySelector("body").appendChild(videoViewNode);
   let videoTitleNode = document.createElement("div");
   videoTitleNode.style.width = "100%";
   videoTitleNode.style.textAlign = "center";
-  videoTitleNode.innerHTML = `<span class="videoTitleNodeTitle">[${currentEmbeddedRowIdx}/${totalRows - 1}]</span> <span>Copy - <span class="videoTitleCopyTag">[videoTag]</span> | <span class="videoTitleCopyPath">[path]</span> | <span class="videoTitleCopyTitle">[title]</span></span>`;
+  videoTitleNode.style.fontSize = "23px";
+  videoTitleNode.style.padding = "2px";
+  videoTitleNode.style.display = "flex";
+  videoTitleNode.style.justifyContent = "space-between";
+  videoTitleNode.innerHTML = `<span class="videoTitleNodeCount">[${currentEmbeddedRowIdx}/${totalRows - 1}]</span><span class="videoTitleNodeTitle"></span><span class="videoTitleCopyContainer">Copy - <span class="videoTitleCopyTag">[videoTag]</span> | <span class="videoTitleCopyPath">[path]</span> | <span class="videoTitleCopyTitle">[title]</span></span>`;
   videoTitleNode.classList.add("videoTitleNode");
   videoViewNode.appendChild(videoTitleNode);
   document.querySelector("body").addEventListener("keydown", (e) => {
@@ -105,10 +124,12 @@ if (topLevelTable) {
 
   function updateTitle(idx) {
     let videoTitleNode = document.querySelector(".videoTitleNode");
+    let videoTitleNodeCount = document.querySelector(".videoTitleNodeCount");
     let videoTitleNodeTitle = document.querySelector(".videoTitleNodeTitle");
     let topLevelBody = topLevelTable.querySelector("tbody");
     let fileName = topLevelBody?.children?.[currentEmbeddedRowIdx]?.children?.[0]?.innerText;
-    videoTitleNodeTitle.innerText = `[${idx || currentEmbeddedRowIdx}/${totalRows - 1}] - ${fileName || "Title"}`;
+    videoTitleNodeCount.innerText = `[${idx || currentEmbeddedRowIdx}/${totalRows - 1}]`;
+    videoTitleNodeTitle.innerText = `${fileName || "Title"}`;
     let videoTitleCopyTag = document.querySelector(".videoTitleCopyTag");
     let videoTitleCopyPath = document.querySelector(".videoTitleCopyPath");
     let videoTitleCopyTitle = document.querySelector(".videoTitleCopyTitle");
@@ -183,12 +204,11 @@ function embedMediaCellClickHandler(e, idx) {
      videoNode.loop = "true";
      videoNode.autoplay = "true";
      videoNode.style.width = "95vw";
-     videoNode.style.height = "95vh";
+     videoNode.style.height = "calc(96vh + 7px)";
      videoNode.style.backgroundColor = "black";
      videoNode.classList.add("videoNode");
      let videoViewNode = document.querySelector(".videoViewNode");
      videoViewNode.style.display = "flex";
-     videoViewNode.style.flexDirection = "column";
      videoViewNode.appendChild(videoNode);
      updateTitle(accurateIdx);
      currentEmbeddedRowIdx = accurateIdx;
