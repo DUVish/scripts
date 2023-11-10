@@ -22,15 +22,18 @@ document.querySelector("head").innerHTML += `
     }
     .videoTitleCopyContainer {
       position: absolute;
-      right: 0px;
+      right: 8px;
       font-size: 18px;
     }
     .videoTitleNodeCount {
       position: absolute;
-      left: 0px;
+      left: 8px;
     }
     .videoTitleNodeTitle {
       width: 100%;
+    }
+    video:focus-visible {
+      outline: none !important;
     }
   </style>
 `
@@ -38,6 +41,8 @@ document.querySelector("head").innerHTML += `
 let topLevelTable = document.querySelector("table");
 
 let currentEmbeddedRowIdx = null;
+
+let lastRandomIdx = null;
 
 if (topLevelTable) {
   document.title = window.location.href.split("/").slice(-3).reverse().join(" - ").slice(2).replaceAll("%20", "");
@@ -77,15 +82,17 @@ if (topLevelTable) {
         window.location.href = oneLevelUp;
     }
   });
-  videoViewNode.addEventListener("keydown", (e) => {
-    let key = e.key;
+  videoViewNode.addEventListener("keydown", changeVideoEventListener);
+
+  function changeVideoEventListener(e) {
+   let key = e.key;
     if (key === "q" || key === "Escape") {
       Array.from(videoViewNode.children).forEach(child => child.tagName === "VIDEO" && child.remove());
       videoViewNode.style.display = "none";
       currentEmbeddedRowIdx = null;
     }
 
-    if (key === "ArrowDown" || key === "ArrowUp" || key === "Home" || key === "End" || key === "PageUp" || key === "PageDown" || key === "r" || key === "Media_Next" || key === "MediaTrackPrevious") {
+    if (key === "ArrowDown" || key === "ArrowUp" || key === "Home" || key === "End" || key === "PageUp" || key === "PageDown" || key === "r" || key === "p" || key === "Media_Next" || key === "MediaTrackPrevious") {
       e.preventDefault();
       if (typeof currentEmbeddedRowIdx === "number") {
         let changedFlag = false;
@@ -106,8 +113,15 @@ if (topLevelTable) {
             changedFlag = true;
         }
         if (key === "r") {
+            lastRandomIdx = currentEmbeddedRowIdx;
             currentEmbeddedRowIdx = Math.floor(Math.random() * (totalRows - 1));
             changedFlag = true;
+        }
+        if (key === "p") {
+           if (lastRandomIdx || lastRandomIdx === 0) {
+             currentEmbeddedRowIdx = lastRandomIdx;
+             changedFlag = true;
+           }
         }
         if (changedFlag) {
           let newVideoSrc = topLevelBody.children[currentEmbeddedRowIdx].querySelector("a").href;
@@ -120,7 +134,7 @@ if (topLevelTable) {
         }
       }
     }
-  });
+  }
 
   function updateTitle(idx) {
     let videoTitleNode = document.querySelector(".videoTitleNode");
@@ -128,8 +142,9 @@ if (topLevelTable) {
     let videoTitleNodeTitle = document.querySelector(".videoTitleNodeTitle");
     let topLevelBody = topLevelTable.querySelector("tbody");
     let fileName = topLevelBody?.children?.[currentEmbeddedRowIdx]?.children?.[0]?.innerText;
+    let treatedFileName = treatFileName(fileName);
     videoTitleNodeCount.innerText = `[${idx || currentEmbeddedRowIdx}/${totalRows - 1}]`;
-    videoTitleNodeTitle.innerText = `${fileName || "Title"}`;
+    videoTitleNodeTitle.innerText = `${treatedFileName || "Title"}`;
     let videoTitleCopyTag = document.querySelector(".videoTitleCopyTag");
     let videoTitleCopyPath = document.querySelector(".videoTitleCopyPath");
     let videoTitleCopyTitle = document.querySelector(".videoTitleCopyTitle");
@@ -139,6 +154,16 @@ if (topLevelTable) {
     videoTitleCopyPath?.addEventListener("click", copyVideoPath);
     videoTitleCopyTitle?.removeEventListener("click", copyVideoTitle);
     videoTitleCopyTitle?.addEventListener("click", copyVideoTitle);
+  }
+
+  const acceptableQualitiesForFileName = new Set(["(US-4k60FPS)", "(4k60FPS)"]);
+
+  function treatFileName(fileName) {
+    if (typeof fileName === "string") {
+       let results = /^([^()]+)(\(.*\))?\.(.*)$/g.exec(fileName);
+       let endBoundary = acceptableQualitiesForFileName.has(results[2]) ? 3 : 2;
+       return results.slice(1, endBoundary).join("").trim();
+    } else return fileName;
   }
 
   function copyVideoTag() {
