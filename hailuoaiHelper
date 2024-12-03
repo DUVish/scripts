@@ -1,0 +1,107 @@
+// ==UserScript==
+// @name         HailuoAI Tab Status
+// @namespace    HailuoAI
+// @version      1.0
+// @description  Gives you notifications for almost-finished videos and sets links so those that get quickly removed have the link lingering (with autoplay to cache in in the browser)
+// @author       DUVish
+// @match        https://hailuoai.video/
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=hailuoai.video
+// @grant        none
+// ==/UserScript==
+
+const linkStyleEl = document.createElement("style");
+const linkStyle = `
+.linkElClass {
+  color: cornflowerblue;
+  position: absolute;
+  top: 45px;
+  left: 0px;
+  height: 14px;
+  width: 26px;
+  font-size: 9px;
+  background-color: black;
+  text-align: center;
+  opacity: 0.35;
+  z-index: 1000000;
+}
+
+.linkElClass:hover {
+  opacity: 1.0;
+}
+`;
+linkStyleEl.textContent = linkStyle;
+document.head.appendChild(linkStyleEl);
+
+const interval = 5 * 1000;
+
+const setTitleFunc = () => {
+    const allLoadingVideos = Array.from(document.querySelectorAll(".ant-progress-text"));
+    const highestPercentage = "";
+    const allNumbers = allLoadingVideos.map((loading) => {
+      const loadingText = loading?.innerText?.match(/(\d+)./)?.[1];
+      const loadingTextNum = Number(loadingText);
+      return loadingTextNum;
+    });
+    const highestNumber = allNumbers.sort((a, b) => b - a)[0];
+    if (!isNaN(highestNumber)) {
+      document.title = "-" + highestNumber + "-";
+      if (highestNumber >= 90) createNotification();
+    } else {
+      document.title = "Empty";
+    }
+};
+
+const setLinkFunc = () => {
+  const videoCards = Array.from(document.querySelectorAll(".video-cards"));
+  videoCards.forEach(video => {
+    if (video.dataset.linkSet) {
+      return;
+    } else {
+      const videoEl = video.querySelector("video");
+      if (!videoEl) return;
+
+      videoEl.play();
+      setTimeout(() => {videoEl.pause()}, 2000);
+      const videoElLink = videoEl.src;
+      const positionedEl = video.querySelector(".aspect-video-padding");
+      const linkEl = document.createElement("span");
+      const anchorEl = document.createElement("a");
+      anchorEl.innerText = "[Link]";
+      linkEl.classList.add("linkElClass");
+      anchorEl.href = videoElLink;
+      linkEl.appendChild(anchorEl);
+      positionedEl.appendChild(linkEl);
+      linkEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.open(videoElLink, "_blank");
+      });
+      video.dataset.linkSet = "true";
+    }
+  });
+}
+
+const runAllForInterval = () => {
+  setTitleFunc();
+  setLinkFunc();
+}
+
+setInterval(runAllForInterval, interval);
+
+function askNotificationPermission() {
+  // Check if the browser supports notifications
+  if (!("Notification" in window)) {
+    console.log("This browser does not support notifications.");
+    return;
+  }
+  Notification.requestPermission().then((permission) => {
+  });
+}
+
+const createNotification = () => {
+  const img = "https://registry.npmmirror.com/@lobehub/icons-static-png/1.5.0/files/dark/hailuo-color.png";
+  const text = `HailuoAI task past 90%.`;
+  const notification = new Notification("HailuoAI video cooked up", { body: text, icon: img });
+}
+
+document.addEventListener('click', askNotificationPermission);
+setTimeout(() => {document.removeEventListener('click', askNotificationPermission)}, interval * 5);
