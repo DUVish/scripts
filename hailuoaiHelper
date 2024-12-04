@@ -2,7 +2,7 @@
 // @name         HailuoAI Tab Status
 // @namespace    HailuoAI
 // @version      1.0
-// @description  Gives you notifications for almost-finished videos and sets links so those that get quickly removed have the link lingering (with autoplay to cache in in the browser)
+// @description  Gives you notifications for almost-finished videos and sets links so those that get quickly removed have the link lingering (with autoplay to cache in in the browser), also can hit generate button automatically if you want on an interval
 // @author       DUVish
 // @match        https://hailuoai.video/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hailuoai.video
@@ -28,9 +28,34 @@ const linkStyle = `
 .linkElClass:hover {
   opacity: 1.0;
 }
+
+.automatic-btn-container {
+  color: white;
+  padding-right: 20px;
+}
+
+.automatic-btn-script {
+  background-color: white;
+  padding: 5px;
+  color: black;
+  border-radius: 9px;
+}
+
+.automatic-btn-script:hover {
+  background-color: #d0cfcf;
+}
+
+.automatic-btn-script:focus {
+  background-color: #a6a6a6;
+}
 `;
 linkStyleEl.textContent = linkStyle;
 document.head.appendChild(linkStyleEl);
+
+let CREATE_BTN_BOOLEAN = true;
+
+const maxQueueSize = 5;
+const queueIsFullMatch = `${maxQueueSize}${maxQueueSize}`;
 
 const interval = 5 * 1000;
 
@@ -80,9 +105,22 @@ const setLinkFunc = () => {
   });
 }
 
+const clickGenerateFunc = () => {
+  const createBtn = document.querySelector(".create-btn-container");
+  if (CREATE_BTN_BOOLEAN && createBtn && !determineIfQueueIsFull()) {
+    createBtn.click();
+  }
+}
+
+const determineIfQueueIsFull = () => {
+  const queueText = document.querySelector(".bg-clip-text")?.textContent;
+  return queueText === queueIsFullMatch;
+}
+
 const runAllForInterval = () => {
   setTitleFunc();
   setLinkFunc();
+  clickGenerateFunc();
 }
 
 setInterval(runAllForInterval, interval);
@@ -105,3 +143,29 @@ const createNotification = () => {
 
 document.addEventListener('click', askNotificationPermission);
 setTimeout(() => {document.removeEventListener('click', askNotificationPermission)}, interval * 5);
+
+const createAutomaticButtonSwitch = () => {
+  let containerSpan = document.createElement("span");
+  containerSpan.classList.add("automatic-btn-container");
+  let textSpan = document.createElement("span");
+  let buttonSpan = document.createElement("span");
+  buttonSpan.classList.add("automatic-btn-script");
+  textSpan.innerText = "GENERATE AUTOMATICALLY - ";
+  buttonSpan.innerText = CREATE_BTN_BOOLEAN ? "TRUE" : "FALSE";
+  buttonSpan.addEventListener("click", (e) => {
+    let button = document.querySelector("automatic-btn-script");
+    CREATE_BTN_BOOLEAN = !CREATE_BTN_BOOLEAN;
+    buttonSpan.innerText = CREATE_BTN_BOOLEAN ? "TRUE" : "FALSE";
+  });
+  containerSpan.appendChild(textSpan);
+  containerSpan.appendChild(buttonSpan);
+  document.querySelector(".nav-right").prepend(containerSpan);
+}
+
+setTimeout(createAutomaticButtonSwitch, interval);
+
+
+
+
+
+
