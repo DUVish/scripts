@@ -2,7 +2,7 @@
 // @name         HailuoAI Tab Status
 // @namespace    HailuoAI
 // @version      1.0
-// @description  Gives you notifications for almost-finished videos and sets links so those that get quickly removed have the link lingering (with autoplay to cache in in the browser), also can hit generate button automatically if you want on an interval
+// @description  Gives you notifications for almost-finished videos and sets links so those that get quickly removed have the link lingering (with autoplay to cache in in the browser), will also clean up videos that are never served up because the server rejects them
 // @author       DUVish
 // @match        https://hailuoai.video/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hailuoai.video
@@ -39,13 +39,14 @@ const linkStyle = `
   padding: 5px;
   color: black;
   border-radius: 9px;
+  cursor: pointer;
 }
 
 .automatic-btn-script:hover {
   background-color: #d0cfcf;
 }
 
-.automatic-btn-script:focus {
+.automatic-btn-script:active {
   background-color: #a6a6a6;
 }
 `;
@@ -58,6 +59,10 @@ const maxQueueSize = 5;
 const queueIsFullMatch = `${maxQueueSize}${maxQueueSize}`;
 
 const interval = 5 * 1000;
+
+const shouldBeDeletedStr = "The video generation failed as it does not comply with community policies.";
+
+const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
 const setTitleFunc = () => {
     const allLoadingVideos = Array.from(document.querySelectorAll(".ant-progress-text"));
@@ -79,7 +84,9 @@ const setTitleFunc = () => {
 const setLinkFunc = () => {
   const videoCards = Array.from(document.querySelectorAll(".video-cards"));
   videoCards.forEach(video => {
-    if (video.dataset.linkSet) {
+    if (determineCardShouldBeDeleted(video)) {
+      deleteVideoCard(video);
+    } else if (video.dataset.linkSet) {
       return;
     } else {
       const videoEl = video.querySelector("video");
@@ -103,6 +110,21 @@ const setLinkFunc = () => {
       video.dataset.linkSet = "true";
     }
   });
+}
+
+const determineCardShouldBeDeleted = (videoEl) => {
+  return videoEl.innerText.split("\n")[0] === shouldBeDeletedStr;
+}
+
+const deleteVideoCard = (videoEl) => {
+  const deleteButton = videoEl.getElementsByClassName("absolute top-3 right-[10px] z-[15] cursor-pointer")?.[0];
+  if (deleteButton) {
+    deleteButton.click();
+    sleep(2000);
+    const confirmButton = document.getElementsByClassName("ant-btn css-o72qen ant-btn-primary")?.[0];
+    confirmButton?.click();
+    sleep(2000);
+  }
 }
 
 const clickGenerateFunc = () => {
